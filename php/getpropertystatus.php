@@ -22,7 +22,7 @@ $response = [
 // Detail query
 $sql = "SELECT * from properties"; 
 // Count query
-$s_sql = "SELECT property_id, COUNT(unit_id) AS unit_count FROM units GROUP BY property_id";
+$s_sql = "SELECT property_id, COUNT(unit_id) AS unit_count FROM units WHERE status='occupied' GROUP BY property_id";
 
 $result = $conn->query($sql);
 $countres = $conn->query($s_sql);
@@ -35,9 +35,8 @@ if ($result && $result->num_rows > 0) {
     // 3. Optimized Count Data Format (The main fix)
     if ($countres && $countres->num_rows > 0) {
         // Creates a key-value map for easy frontend access
-        while($row = $countres->fetch_assoc()) {
-            $response["count"][$row['property_id']] = (int)$row['unit_count'];
-        }
+            $response["count"] =$countres->fetch_all(MYSQLI_ASSOC);
+        
     }
     
     echo json_encode($response);

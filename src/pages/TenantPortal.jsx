@@ -53,6 +53,7 @@ const TenantPortal = () => {
       .then((payload) => {
         setData(payload || {})
         setLoading(false)
+        console.log(payload)
       })
       .catch((e) => {
         setError('Failed to load tenant dashboard')
