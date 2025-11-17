@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import Home from './pages/Home'
+import TenantPortal from './pages/TenantPortal'
 import AdminManagement from './pages/AdminManagement'
 import Report from './pages/Report'
 import Fund from './pages/Fund'
@@ -24,6 +25,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
+          <Route path="tenant-portal" element={<TenantPortal />} />
           <Route path="admin-management" element={<AdminManagement />} />
           <Route path="report" element={<Report />} />
           <Route path="fund" element={<Fund />} />

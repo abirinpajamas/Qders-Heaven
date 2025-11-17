@@ -1,6 +1,9 @@
 import { CheckSquare, Building2, DoorOpen } from 'lucide-react'
+import { useState,useEffect } from 'react'
 
 const PropertyStatus = () => {
+
+  const [statusdate,setStatusdata]=useState([])
   const properties = [
     {
       id: 1,
@@ -30,6 +33,22 @@ const PropertyStatus = () => {
       occupancyRate: 83.3
     }
   ]
+
+  useEffect(()=>{
+    fetch('http://localhost/qadersheavennew/php/getpropertystatus.php')
+    .then((res)=>res.json())
+    .then((data)=>{
+      setStatusdata(data)
+      console.log(data) 
+    .catch((error) => { // <-- ADD THIS CATCH BLOCK
+      console.error("Fetch Error:", error);
+      // Optional: Set some error state here to show a message to the user
+    });
+    })
+
+
+
+  },[])
 
   return (
     <div className="space-y-6">

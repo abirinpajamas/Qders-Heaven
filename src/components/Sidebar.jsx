@@ -22,6 +22,7 @@ import {
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const menuItems = [
     { path: '/', icon: Home, label: 'Home' },
+    { path: '/tenant-portal', icon: UserCheck, label: 'Tenant Portal' },
     { path: '/admin-management', icon: Users, label: 'Admin Management' },
     { path: '/report', icon: FileText, label: 'Report' },
     { path: '/fund', icon: DollarSign, label: 'Fund' },
