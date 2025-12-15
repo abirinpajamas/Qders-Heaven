@@ -1,5 +1,5 @@
 import { Plus, Phone, Mail, MapPin, Edit, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import axios from 'axios'
 
 
@@ -20,6 +20,10 @@ const ServiceProviderContact = () => {
   const providers = [
     { id: 1, name: 'ABC Plumbing Services', category: 'Plumbing', phone: '+880 1711-123456', email: 'abc@plumbing.com', address: 'Dhaka, Bangladesh' },
     ]
+  const [providerdata,setproviderdata]=useState([])  
+  const [popup,setpopup]=useState(false)  
+  const [selecteddata,setselecteddata]=useState(null)
+  const [resfresh,setresfresh]=useState(false)
 
   const handleSubmit=async (e)=>{
     e.preventDefault();
@@ -37,10 +41,39 @@ const ServiceProviderContact = () => {
      })
      console.log(response.data.success)
      console.log(response.data)
+     setresfresh(!resfresh)
     }catch(err){
       console.error(err)
     }
     
+  }
+
+  useEffect(()=>{
+   fetch('http://localhost/qadersheavennew/php/getserviceprovider.php')
+    .then((res)=>res.json())
+    .then((data)=>{
+      console.log(data)
+      setproviderdata(data)
+    })
+    .catch((error)=>{
+      console.error('Error fetching providers:', error);
+    })
+  },[resfresh])
+
+  const handledelete=async(id)=>{
+    console.log(id)
+    setpopup(false)
+    try{
+      const response=await axios.post('http://localhost/qadersheavennew/php/deleteservprovider.php', {
+        id
+      })
+      console.log(response.data.success)
+      console.log(response.data)
+      setresfresh(!resfresh)
+
+     }catch(err){
+       console.error(err)
+     }
   }
   
   return (
@@ -58,44 +91,73 @@ const ServiceProviderContact = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {providers.map((provider) => (
-          <div key={provider.id} className="card hover:shadow-lg transition-shadow">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-bold text-gray-800">{provider.name}</h3>
-                <span className="inline-block px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-medium mt-2">
-                  {provider.category}
-                </span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <button className="btn-icon bg-blue-100 hover:bg-blue-200 text-blue-700">
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button className="btn-icon bg-red-100 hover:bg-red-200 text-red-700">
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {providerdata.map((provider) => (
+        <div key={provider.provider_id} className="card hover:shadow-lg transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-bold text-gray-800">{provider.provider_name}</h3>
+              <span className="inline-block px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-medium mt-2">
+                {provider.servicetype}
+              </span>
             </div>
-            <div className="space-y-3">
-              <div className="flex items-center text-sm text-gray-600">
-                <Phone className="w-4 h-4 mr-3 text-primary-600" />
-                {provider.phone}
-              </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <Mail className="w-4 h-4 mr-3 text-primary-600" />
-                {provider.email}
-              </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <MapPin className="w-4 h-4 mr-3 text-primary-600" />
-                {provider.address}
-              </div>
+            <div className="flex items-center space-x-2">
+              <button className="btn-icon bg-blue-100 hover:bg-blue-200 text-blue-700">
+                <Edit className="w-4 h-4" />
+              </button>
+              <button className="btn-icon bg-red-100 hover:bg-red-200 text-red-700" onClick={() => { setpopup(true); setselecteddata(provider.provider_id); }}>
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           </div>
-        ))}
-      </div>
+          <div className="space-y-3">
+            <div className="flex items-center text-sm text-gray-600">
+              <Phone className="w-4 h-4 mr-3 text-primary-600" />
+              {provider.phone_no}
+            </div>
+            <div className="flex items-center text-sm text-gray-600">
+              <Mail className="w-4 h-4 mr-3 text-primary-600" />
+              {provider.email}
+            </div>
+            <div className="flex items-center text-sm text-gray-600">
+              <MapPin className="w-4 h-4 mr-3 text-primary-600" />
+              {provider.address}
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
 
+    {popup && (
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50">
+        <div className="bg-white w-full max-w-sm mx-auto rounded-2xl shadow-2xl p-6 space-y-4 border border-red-100">
+          <h2 className="text-xl font-semibold text-center text-red-700 mb-4">
+            Confirm Deletion
+          </h2>
+          <p className="text-gray-700 text-center">
+            Are you sure you want to delete this service provider? This action cannot be undone.
+          </p>
+          <div className="flex justify-between mt-6">
+            <button
+              type="button"
+              onClick={() => setpopup(false)}
+              className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => handledelete(selecteddata)}
+              className="px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 shadow-sm transition"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </div>
+   
     {prov && (
       
        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50">
