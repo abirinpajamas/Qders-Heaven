@@ -1,49 +1,63 @@
 import { Receipt, Download, Eye, Send } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import axios from 'axios'
 
 const TenantsBill = () => {
-  const bills = [
-    {
-      id: 1,
-      billNo: 'BILL-2024-001',
-      tenant: 'Ahmed Rahman',
-      unit: 'Unit 2',
-      month: 'January 2024',
-      amount: 31800,
-      dueDate: '2024-02-05',
-      status: 'Paid'
-    },
-    {
-      id: 2,
-      billNo: 'BILL-2024-002',
-      tenant: 'Fatima Begum',
-      unit: 'Unit 5',
-      month: 'January 2024',
-      amount: 31800,
-      dueDate: '2024-02-05',
-      status: 'Pending'
-    },
-    {
-      id: 3,
-      billNo: 'BILL-2024-003',
-      tenant: 'Karim Hossain',
-      unit: 'Unit 1',
-      month: 'January 2024',
-      amount: 31800,
-      dueDate: '2024-02-05',
-      status: 'Overdue'
-    },
-    {
-      id: 4,
-      billNo: 'BILL-2024-004',
-      tenant: 'Nasrin Akter',
-      unit: 'Unit 7',
-      month: 'January 2024',
-      amount: 31800,
-      dueDate: '2024-02-05',
-      status: 'Paid'
-    }
-  ]
+  const [bills, setBills] = useState([])
+  const [refresh, setRefresh] = useState(false)
+  const [property, setproperty] = useState([])
+  const [selectedPropertyId, setSelectedPropertyId] = useState('all')
 
+  useEffect(() => {
+    fetch('http://localhost/qadersheavennew/php/getbills.php')
+      .then(res => res.json())
+      .then(data => setBills(data || []))
+      .catch(console.error)
+  }, [refresh])
+
+   useEffect(()=>{
+
+    fetch('http://localhost/qadersheavennew/php/fetchproperty.php')
+    .then(res=>res.json())
+    .then(data=>setproperty(data||[]))
+    .catch(console.error)
+   },[])
+  const isCurrentMonth = (dateStr) => {
+    if (!dateStr) return false
+    const d = new Date(dateStr)
+    const now = new Date()
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+  }
+
+const displayBills = bills.filter(bill => {
+    // 1. Apply the original complex status filter:
+    const passesStatusFilter = (bill.status.toLowerCase() === 'paid' ? isCurrentMonth(bill.period_start) : true);
+    
+    // 2. Apply the property filter:
+    const passesPropertyFilter = (
+      // If no ID is selected (or 'all' is selected), pass all bills
+      !selectedPropertyId || selectedPropertyId === 'all' ||
+      // Otherwise, check if the bill's property_id matches the selected ID
+      String(bill.property_id) === String(selectedPropertyId)
+    );
+
+    // Only include bills that pass BOTH filters
+    return passesStatusFilter && passesPropertyFilter;
+  });  
+
+  const handleStatusChange = async (bill_id, status) => {
+    try {
+      const res = await axios.post('http://localhost/qadersheavennew/php/updatebillstatus.php', { bill_id, status })
+      if (res.data && res.data.success) {
+        setBills(prev => prev.map(b => b.bill_id === bill_id ? { ...b, status, changes_date: new Date().toISOString().slice(0,10) } : b))
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+ 
+  
   return (
     <div className="space-y-6">
       <div>
@@ -54,22 +68,41 @@ const TenantsBill = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="card bg-gradient-to-br from-blue-500 to-blue-600 text-white">
           <p className="text-blue-100 mb-2">Total Bills</p>
-          <h3 className="text-3xl font-bold">156</h3>
+          <h3 className="text-3xl font-bold">{bills.length}</h3>
         </div>
         <div className="card bg-gradient-to-br from-green-500 to-green-600 text-white">
           <p className="text-green-100 mb-2">Paid</p>
-          <h3 className="text-3xl font-bold">132</h3>
+          <h3 className="text-3xl font-bold">{bills.filter(b => b.status==='paid').length}</h3>
         </div>
         <div className="card bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
-          <p className="text-yellow-100 mb-2">Pending</p>
-          <h3 className="text-3xl font-bold">21</h3>
+          <p className="text-yellow-100 mb-2">Unpaid</p>
+          <h3 className="text-3xl font-bold">{bills.filter(b => b.status==='unpaid').length}</h3>
         </div>
         <div className="card bg-gradient-to-br from-red-500 to-red-600 text-white">
           <p className="text-red-100 mb-2">Overdue</p>
-          <h3 className="text-3xl font-bold">3</h3>
+          <h3 className="text-3xl font-bold">{bills.filter(b => b.status==='overdue').length}</h3>
         </div>
       </div>
-
+      <div className="flex justify-end"> {/* Use flex to push content to the right */}
+       <div className="w-40 sm:w-64"> {/* Control the width of the select box */}
+        <label htmlFor="property-select" className="sr-only">Filter by Property</label>
+          <select
+           id="property-select"
+           value={selectedPropertyId} // Change this state name to something like 'selectedPropertyId' for clarity
+           onChange={(e)=>setSelectedPropertyId(e.target.value)}
+           // Use full width and common form styles
+           className="block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+           required
+          >
+            {property.map((prop) => (
+              <option key={prop.property_id} value={prop.property_id}>
+                {prop.name}
+              </option>
+            ))}
+            <option value="all">All Properties</option>
+          </select>
+        </div>
+      </div>
       <div className="table-container">
         <table className="w-full">
           <thead className="table-header">
@@ -85,24 +118,25 @@ const TenantsBill = () => {
             </tr>
           </thead>
           <tbody>
-            {bills.map((bill) => (
-              <tr key={bill.id} className="table-row">
-                <td className="px-6 py-4 text-sm font-medium text-gray-700">{bill.billNo}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{bill.tenant}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{bill.unit}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{bill.month}</td>
-                <td className="px-6 py-4 text-sm font-medium text-gray-700">৳{bill.amount.toLocaleString()}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{bill.dueDate}</td>
+            {displayBills.map((bill) => (
+              <tr key={bill.bill_id} className="table-row">
+                <td className="px-6 py-4 text-sm font-medium text-gray-700">{`BILL-${bill.bill_id}`}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{bill.tenant_name || '-'}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{bill.unit_number}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{new Date(bill.period_start).toLocaleString('en-US', { month: 'long', year: 'numeric' })}</td>
+                <td className="px-6 py-4 text-sm font-medium text-gray-700">৳{Number(bill.amount).toLocaleString()}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{bill.period_end}</td>
                 <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    bill.status === 'Paid' 
-                      ? 'bg-green-100 text-green-700' 
-                      : bill.status === 'Pending'
-                      ? 'bg-yellow-100 text-yellow-700'
-                      : 'bg-red-100 text-red-700'
-                  }`}>
-                    {bill.status}
-                  </span>
+                  <select
+                    value={bill.status}
+                    onChange={(e) => handleStatusChange(bill.bill_id, e.target.value)}
+                    className="px-2 py-1 rounded border text-sm"
+                  >
+                    <option value="paid">Paid</option>
+                    <option value="pending">Pending</option>
+                    <option value="overdue">Overdue</option>
+                    <option value="unpaid">Unpaid</option>
+                  </select>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center space-x-2">

@@ -54,7 +54,7 @@ const PropertyStatus = () => {
 
   
 
-  },[])
+  },[statusdata, unitdata])
 
 
 

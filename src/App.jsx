@@ -31,7 +31,7 @@ function App() {
           <Route path="fund" element={<Fund />} />
           <Route path="service-provider-contact" element={<ServiceProviderContact />} />
           <Route path="property" element={<Property />} />
-          <Route path="floor" element={<Floor />} />
+          {/*<Route path="floor" element={<Floor />} />*/}
           <Route path="meter" element={<Meter />} />
           <Route path="unit-entry" element={<UnitEntry />} />
           <Route path="property-status" element={<PropertyStatus />} />

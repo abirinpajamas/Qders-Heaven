@@ -1,4 +1,4 @@
-import { FileSpreadsheet, Plus, Calendar } from 'lucide-react'
+import { FileSpreadsheet, Plus, Calendar, Eye, Download, FileText } from 'lucide-react'
 import { useState,useEffect } from 'react'
 import axios from 'axios'
 
@@ -14,6 +14,19 @@ const TenantsBillGenerate = () => {
   const [status, setStatus] = useState('')
   const [meterid, setMeterid] = useState('')
   const [note, setNote] = useState('')
+  const [pdfUrl, setPdfUrl] = useState(null)
+
+  // Load jsPDF UMD from CDN once
+  useEffect(() => {
+    if (window.jspdf && window.jspdf.jsPDF) return
+    const script = document.createElement('script')
+    script.src = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'
+    script.async = true
+    document.body.appendChild(script)
+    return () => {
+      document.body.removeChild(script)
+    }
+  }, [])
  useEffect(()=>{
   fetch('http://localhost/qadersheavennew/php/getunits.php')
   .then((res)=>res.json())
@@ -48,13 +61,73 @@ const TenantsBillGenerate = () => {
     })
     console.log(response.data.success)
     console.log(response.data)
+    await generatePdf()
 
     }catch(err){
     console.error(err)
   }
 }
 
+ // Create a simple PDF with the bill info
+ const generatePdf = async () => {
+  try{
+    const { jsPDF } = window.jspdf || {}
+    if (!jsPDF) {
+      alert('PDF generator not loaded. Please wait a moment and try again.')
+      return
+    }
+    const doc = new jsPDF()
+    const line = (y) => doc.line(10, y, 200, y)
 
+    doc.setFontSize(16)
+    doc.text("Tenant's Bill", 10, 15)
+    line(18)
+
+    doc.setFontSize(12)
+    let y = 30
+    const rows = [
+      ['Property ID', String(selectedProperty || '')],
+      ['Unit', String(selectedUnit || '')],
+      ['Meter ID', String(meterid || '')],
+      ['Period Start', String(startperiod || '')],
+      ['Period End', String(endperiod || '')],
+      ['Rent Amount (৳)', String(rentAmount || '')],
+      ['Status', String(status || '')],
+      ['Note', String(note || '')],
+    ]
+    rows.forEach(([k, v]) => {
+      doc.text(`${k}:`, 10, y)
+      doc.text(v, 80, y)
+      y += 8
+    })
+
+    const blob = doc.output('blob')
+    if (pdfUrl) URL.revokeObjectURL(pdfUrl)
+    const url = URL.createObjectURL(blob)
+    setPdfUrl(url)
+  } catch(err){
+    console.error(err)
+  }
+ }
+
+ // View and Download handlers for generated PDF
+ const handleViewPdf = () => {
+   if (pdfUrl) window.open(pdfUrl, '_blank')
+ }
+
+ const handleDownloadPdf = () => {
+   if (!pdfUrl) return
+   const a = document.createElement('a')
+   a.href = pdfUrl
+   a.download = `tenant-bill-${selectedUnit || 'unit'}-${startperiod || ''}-${endperiod || ''}.pdf`
+   document.body.appendChild(a)
+   a.click()
+   document.body.removeChild(a)
+ }
+
+ const handlereset=()=>{
+    window.location.reload();
+ }
   return (
     <div className="space-y-6">
       <div>
@@ -72,8 +145,9 @@ const TenantsBillGenerate = () => {
             <select className="input-field"
               value={selectedProperty}
               onChange={(e)=>setSelectedProperty(e.target.value)}
+              required
             >
-              <option>Apartment</option>
+              <option>Select Property</option>
               {property.map((prop)=>(
               <option key={prop.property_id} value={prop.property_id}>
                 {prop.name}
@@ -87,7 +161,7 @@ const TenantsBillGenerate = () => {
             <select 
             value={selectedUnit}
             onChange={(e)=>setSelectedUnit(e.target.value)}
-            className="input-field">
+            className="input-field" required>
               <option value=''>Select Unit</option>
               {units.filter(unit=>unit.property_id===selectedProperty).map((unit)=>(
               <option key={unit.unit_id} value={unit.unit_id}>
@@ -105,11 +179,11 @@ const TenantsBillGenerate = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">Fiscal Period</label>
           <div className="flex space-x-4"> 
           <div> 
-            <input type="date" value={startperiod} onChange={(e)=>setStartperiod(e.target.value)} className="input-field" />
+            <input type="date" value={startperiod} onChange={(e)=>setStartperiod(e.target.value)} className="input-field" required/>
           </div>
            <p className='mx-4'>to</p>
           <div>
-            <input type="date" value={endperiod} onChange={(e)=>setEndperiod(e.target.value)} className="input-field" />
+            <input type="date" value={endperiod} onChange={(e)=>setEndperiod(e.target.value)} className="input-field" required/>
           </div>
           </div> 
           </div> 
@@ -123,7 +197,7 @@ const TenantsBillGenerate = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-            <select className="input-field" value={status} onChange={(e)=>setStatus(e.target.value)}>
+            <select className="input-field" value={status} onChange={(e)=>setStatus(e.target.value)} required>
               <option value="">Select Status</option>
               <option value="Unpaid">Unpaid</option>
               <option value="Paid">Paid</option>
@@ -173,8 +247,20 @@ const TenantsBillGenerate = () => {
             <FileSpreadsheet className="w-5 h-5" />
             <span>Generate Bill</span>
           </button>
-          <button className="btn-secondary">Reset</button>
+          <button className="btn-secondary" onClick={handlereset}>Reset</button>
         </div>
+        {pdfUrl && (
+          <div className="mt-4 inline-flex items-center space-x-3 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
+            <FileText className="w-5 h-5 text-gray-700" />
+            <span className="text-sm text-gray-700">Bill PDF ready</span>
+            <button type="button" onClick={handleViewPdf} className="btn-icon bg-blue-100 hover:bg-blue-200 text-blue-700">
+              <Eye className="w-4 h-4" />
+            </button>
+            <button type="button" onClick={handleDownloadPdf} className="btn-icon bg-green-100 hover:bg-green-200 text-green-700">
+              <Download className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
       </form>
       

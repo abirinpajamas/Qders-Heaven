@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Plus, Eye, Edit, Trash2, Search, Mail, Phone } from 'lucide-react'
+import axios from 'axios'
 
 const AdminManagement = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [userdata,setUserdata]=useState([])
+  const [popup,setpopup]=useState(false)
+  const [selectedId,setselectedId]=useState(null)
+  const [refresh,setrefresh]=useState(false)
 
 
 
@@ -15,7 +19,7 @@ const AdminManagement = () => {
       console.log(data)
     })
     
-  }, [])
+  }, [refresh])
   
   const admins = [
     { id: 1, name: 'Bismillahir Rahman', email: 'admin@qadersheaven.com', phone: '+880 1234-567890', role: 'Super Admin', status: 'Active' },
@@ -23,68 +27,111 @@ const AdminManagement = () => {
     { id: 3, name: 'Fatima Khan', email: 'fatima@qadersheaven.com', phone: '+880 1234-567892', role: 'Manager', status: 'Active' },
   ]
 
+  const handledelete = async (id) => {
+    setpopup(false)
+    console.log(`this is the id ${id}`)
+    try{
+      const response = await axios.post('http://localhost/qadersheavennew/php/deleteuser.php', { id })
+      console.log(response.data)
+      setrefresh(!refresh)
+    } catch(err){
+      console.error(err)
+    }
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Admin Management</h1>
-          <p className="text-gray-600 mt-1">Manage system administrators</p>
+    <>
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Admin Management</h1>
+            <p className="text-gray-600 mt-1">Manage system administrators</p>
+          </div>
+          <button className="btn-primary flex items-center space-x-2">
+            <Plus className="w-5 h-5" />
+            <span>Add Admin</span>
+          </button>
         </div>
-        <button className="btn-primary flex items-center space-x-2">
-          <Plus className="w-5 h-5" />
-          <span>Add Admin</span>
-        </button>
+
+        <div className="card">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search admins..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-field pl-10"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {userdata.map((admin) => (
+            <div key={admin.user_id} className="card hover:shadow-lg transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
+                  <span className="text-2xl font-bold text-primary-600">{admin.fname}</span>
+                </div>
+                <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                  {admin.user_type}
+                </span>
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-1">{admin.fname}{admin.lname}</h3>
+              <p className="text-sm text-primary-600 font-medium mb-4">{admin.user_type}</p>
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Mail className="w-4 h-4 mr-2" />
+                  {admin.email}
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <p  >
+                  Account Created: {admin.created_at}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button className="flex-1 btn-icon bg-blue-100 hover:bg-blue-200 text-blue-700">
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button className="flex-1 btn-icon bg-red-100 hover:bg-red-200 text-red-700" onClick={() => { setpopup(true); setselectedId(admin.user_id); }}>
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div className="card">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Search admins..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="input-field pl-10"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {userdata.map((admin) => (
-          <div key={admin.id} className="card hover:shadow-lg transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
-                <span className="text-2xl font-bold text-primary-600">{admin.fname}</span>
-              </div>
-              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                {admin.user_type}
-              </span>
-            </div>
-            <h3 className="text-lg font-bold text-gray-800 mb-1">{admin.fname}{admin.lname}</h3>
-            <p className="text-sm text-primary-600 font-medium mb-4">{admin.user_type}</p>
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center text-sm text-gray-600">
-                <Mail className="w-4 h-4 mr-2" />
-                {admin.email}
-              </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <p  >
-                Account Created: {admin.created_at}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button className="flex-1 btn-icon bg-blue-100 hover:bg-blue-200 text-blue-700">
-                <Edit className="w-4 h-4" />
+      {popup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50">
+          <div className="bg-white w-full max-w-sm mx-auto rounded-2xl shadow-2xl p-6 space-y-4 border border-red-100">
+            <h2 className="text-xl font-semibold text-center text-red-700 mb-4">
+              Confirm Deletion
+            </h2>
+            <p className="text-gray-700 text-center">
+              Are you sure you want to delete this admin? This action cannot be undone.
+            </p>
+            <div className="flex justify-between mt-6">
+              <button
+                type="button"
+                onClick={() => setpopup(false)}
+                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+              >
+                Cancel
               </button>
-              <button className="flex-1 btn-icon bg-red-100 hover:bg-red-200 text-red-700">
-                <Trash2 className="w-4 h-4" />
+              <button
+                type="button"
+                onClick={() => handledelete(selectedId)}
+                className="px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 shadow-sm transition"
+              >
+                Delete
               </button>
             </div>
           </div>
-        ))}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   )
 }
 
