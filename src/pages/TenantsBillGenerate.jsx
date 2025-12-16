@@ -15,6 +15,7 @@ const TenantsBillGenerate = () => {
   const [meterid, setMeterid] = useState('')
   const [note, setNote] = useState('')
   const [pdfUrl, setPdfUrl] = useState(null)
+  const [popup, setpopup] = useState(false);
 
   // Load jsPDF UMD from CDN once
   useEffect(() => {
@@ -70,45 +71,92 @@ const TenantsBillGenerate = () => {
 
  // Create a simple PDF with the bill info
  const generatePdf = async () => {
-  try{
-    const { jsPDF } = window.jspdf || {}
+  try {
+    const { jsPDF } = window.jspdf || {};
     if (!jsPDF) {
-      alert('PDF generator not loaded. Please wait a moment and try again.')
-      return
+      alert('PDF generator not loaded. Please wait a moment and try again.');
+      return;
     }
-    const doc = new jsPDF()
-    const line = (y) => doc.line(10, y, 200, y)
 
-    doc.setFontSize(16)
-    doc.text("Tenant's Bill", 10, 15)
-    line(18)
+    const doc = new jsPDF();
+    
+    // --- 1. Header Design ---
+    doc.setFillColor(44, 62, 80); // Professional Dark Blue/Grey
+    doc.rect(0, 0, 210, 30, 'F'); // Fill a rectangle at the top
+    
+    doc.setTextColor(255, 255, 255); // White text
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("TENANT'S BILL", 15, 20);
+    
+    // Reset for Body
+    doc.setTextColor(0, 0, 0); 
+    
+    // --- 2. Data Preparation ---
+    // Using .find() instead of .filter()[0] is cleaner and faster
+    const propName = property.find(p => p.property_id === selectedProperty)?.name || 'N/A';
+    const unitNum = units.find(u => u.unit_id === selectedUnit)?.unit_number || 'N/A';
 
-    doc.setFontSize(12)
-    let y = 30
     const rows = [
-      ['Property ID', String(selectedProperty || '')],
-      ['Unit', String(selectedUnit || '')],
-      ['Meter ID', String(meterid || '')],
-      ['Period Start', String(startperiod || '')],
-      ['Period End', String(endperiod || '')],
-      ['Rent Amount (৳)', String(rentAmount || '')],
-      ['Status', String(status || '')],
-      ['Note', String(note || '')],
-    ]
-    rows.forEach(([k, v]) => {
-      doc.text(`${k}:`, 10, y)
-      doc.text(v, 80, y)
-      y += 8
-    })
+      ['Property Name', propName],
+      ['Unit Number', unitNum],
+      ['Meter ID', meterid || 'N/A'],
+      ['Billing Period', `${startperiod || '...'} to ${endperiod || '...'}`],
+      ['Rent Amount', `${rentAmount || '0'} BDT`],
+      ['Status', (status || 'Pending').toUpperCase()],
+      ['Note', note || 'N/A']
+    ];
 
-    const blob = doc.output('blob')
-    if (pdfUrl) URL.revokeObjectURL(pdfUrl)
-    const url = URL.createObjectURL(blob)
-    setPdfUrl(url)
-  } catch(err){
-    console.error(err)
+    // --- 3. Rendering Content ---
+    let y = 45; // Start below the header
+    
+    rows.forEach(([label, value]) => {
+      // Draw Label (Bold & Grey)
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(100, 100, 100);
+      doc.text(`${label}:`, 15, y);
+
+      // Draw Value (Normal & Black)
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(0, 0, 0);
+      doc.text(String(value), 70, y);
+
+      // Draw a very light separator line
+      doc.setDrawColor(230, 230, 230);
+      doc.line(15, y + 2, 195, y + 2);
+
+      y += 12; // More spacing between rows for a "clean" look
+    });
+
+    // --- 4. Notes Section ---
+    if (note) {
+      y += 10;
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(10);
+      doc.setTextColor(120, 120, 120);
+      doc.text("Note:", 15, y);
+      // Use splitTextToSize in case the note is very long
+      const splitNote = doc.splitTextToSize(note, 180);
+      doc.text(splitNote, 15, y + 5);
+    }
+
+    // --- 5. Footer ---
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`Generated on ${new Date().toLocaleString()}`, 15, 285);
+
+    // Output
+    const blob = doc.output('blob');
+    if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    const url = URL.createObjectURL(blob);
+    setPdfUrl(url);
+
+  } catch (err) {
+    console.error("PDF Generation Error:", err);
   }
- }
+};
 
  // View and Download handlers for generated PDF
  const handleViewPdf = () => {
@@ -129,6 +177,7 @@ const TenantsBillGenerate = () => {
     window.location.reload();
  }
   return (
+    <>
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-800">Tenant's Bill Generate</h1>
@@ -267,12 +316,14 @@ const TenantsBillGenerate = () => {
       <div className="card">
         <h2 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="p-4 bg-primary-50 hover:bg-primary-100 rounded-lg text-left transition-colors">
+          <button className="p-4 bg-primary-50 hover:bg-primary-100 rounded-lg text-left transition-colors" 
+          onClick={() => setpopup(true)}>
             <Calendar className="w-8 h-8 text-primary-600 mb-2" />
-            <h3 className="font-medium text-gray-800">Generate Monthly Bills</h3>
+            <h3 className="font-medium text-gray-800" >Generate Monthly Bills</h3>
             <p className="text-sm text-gray-600 mt-1">For all tenants</p>
           </button>
-          <button className="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-left transition-colors">
+          <button className="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-left transition-colors"
+          onClick={() => setpopup(true)}>
             <FileSpreadsheet className="w-8 h-8 text-green-600 mb-2" />
             <h3 className="font-medium text-gray-800">Bulk Bill Generation</h3>
             <p className="text-sm text-gray-600 mt-1">Multiple properties</p>
@@ -284,7 +335,38 @@ const TenantsBillGenerate = () => {
           </button>
         </div>
       </div>
+      
+    
     </div>
+     {popup && (
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50">
+        <div className="bg-white w-full max-w-sm mx-auto rounded-2xl shadow-2xl p-6 space-y-4 border border-red-100">
+          <h2 className="text-xl font-semibold text-center text-red-700 mb-4">
+            Confirm Bulk Bill Generation
+          </h2>
+          <p className="text-gray-700 text-center">
+            Are you sure you want generate all bills at once? Bills will be calculated based on base rent.
+          </p>
+          <div className="flex justify-between mt-6">
+            <button
+              type="button"
+              onClick={() => setpopup(false)}
+              className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => handledelete(selectedId)}
+              className="px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 shadow-sm transition"
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
 

@@ -1,6 +1,7 @@
 import { Plus, Building2, MapPin, Edit, Trash2, Eye } from 'lucide-react'
 import { useState,useEffect } from 'react'
 import axios from 'axios'
+import { useLocation } from 'react-router-dom';
 
 const Property = () => {
 
@@ -17,13 +18,21 @@ const Property = () => {
     const [propertydata,setpropertydata]=useState([])
     const [popup,setpopup]=useState(false)
     const [selectedId,setselectedId]=useState(null)
+    const location = useLocation();
 
   const properties = [
     { id: 1, name: 'Rangs Qaders Heaven', address: 'Mirpur, Dhaka', floors: 5, units: 20, status: 'Active' },
     { id: 2, name: 'Green Valley Apartments', address: 'Gulshan, Dhaka', floors: 8, units: 32, status: 'Active' },
     { id: 3, name: 'Sunset Heights', address: 'Banani, Dhaka', floors: 6, units: 24, status: 'Active' },
   ]
- 
+  
+  useEffect(() => {
+    // Check if the navigation sent "openForm: true"
+    if (location.state?.openForm) {
+      setprov(true);
+    }
+  }, [location]);
+
    useEffect(()=>{
       fetch('http://localhost/qadersheavennew/php/fetchproperty.php')
       .then((res)=>res.json())

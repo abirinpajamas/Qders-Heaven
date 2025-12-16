@@ -1,9 +1,10 @@
 import { Building2, Users, DollarSign, FileText, TrendingUp, TrendingDown } from 'lucide-react'
 import { useState,useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'; // Add this line
 
 const Home = () => {
 
-
+  const navigate = useNavigate(); 
   const [propertydata,setpropertydata]=useState([])
   const [tenantdata,settenantdata]=useState([])
   const [homevalues,sethomevalues]=useState([])
@@ -124,8 +125,8 @@ useEffect(()=>{
       <div className="card">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="btn-primary">Add New Property</button>
-          <button className="btn-success">Generate Bill</button>
+          <button className="btn-primary" onClick={() => navigate('/property', { state: { openForm: true } })}>Add New Property</button>
+          <button className="btn-success" onClick={() => navigate('/tenants-bill-generate')}>Generate Bill</button>
           <button className="btn-secondary">View Reports</button>
         </div>
       </div>

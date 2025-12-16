@@ -113,7 +113,7 @@ const UnitEntry = () => {
               <th className="px-6 py-4 text-left text-sm font-semibold">Sl.No</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">Unit No</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">Property</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold">Floor</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold">Base Rent(৳)</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">Size</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">Bedrooms</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
@@ -131,7 +131,7 @@ const UnitEntry = () => {
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-700">{unit.name}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{unit.floor_id}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{unit.base_rent}</td>
                 <td className="px-6 py-4 text-sm text-gray-700">{unit.square_footage}</td>
                 <td className="px-6 py-4 text-sm text-gray-700">{unit.bedrooms}</td>
                 <td className="px-6 py-4">
