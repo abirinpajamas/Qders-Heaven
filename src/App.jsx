@@ -18,6 +18,7 @@ import TenantsBill from './pages/TenantsBill'
 import PaymentDetails from './pages/PaymentDetails'
 import Settings from './pages/Settings'
 import BasicSettings from './pages/BasicSettings'
+import MaintenanceBill from './pages/MaintenanceBill'
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
           <Route path="tenants-bill-generate" element={<TenantsBillGenerate />} />
           <Route path="tenants-bill" element={<TenantsBill />} />
           <Route path="payment-details" element={<PaymentDetails />} />
+          <Route path="maintenance-bill" element={<MaintenanceBill />} />
           <Route path="settings" element={<Settings />} />
           <Route path="basic-settings" element={<BasicSettings />} />
         </Route>

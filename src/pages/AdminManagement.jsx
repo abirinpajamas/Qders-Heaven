@@ -1,13 +1,24 @@
 import { useState, useEffect } from 'react'
-import { Plus, Eye, Edit, Trash2, Search, Mail, Phone } from 'lucide-react'
+import { Plus, Eye, Edit, Trash2, Search, Mail, Phone, User, Lock, UserPlus } from 'lucide-react'
 import axios from 'axios'
 
 const AdminManagement = () => {
   const [searchTerm, setSearchTerm] = useState('')
-  const [userdata,setUserdata]=useState([])
-  const [popup,setpopup]=useState(false)
-  const [selectedId,setselectedId]=useState(null)
-  const [refresh,setrefresh]=useState(false)
+  const [userdata, setUserdata] = useState([])
+  const [popup, setpopup] = useState(false)
+  const [selectedId, setselectedId] = useState(null)
+  const [refresh, setrefresh] = useState(false)
+  const [showAddAdmin, setShowAddAdmin] = useState(false)
+  const [formData, setFormData] = useState({
+    fname: '',
+    lname: '',
+    email: '',
+    phone: '',
+    user_type: 'Staff',
+    password: '',
+    confirmPassword: ''
+  })
+  const [errors, setErrors] = useState({})
 
 
 
@@ -39,16 +50,229 @@ const AdminManagement = () => {
     }
   }
 
+  const validateForm = () => {
+    const newErrors = {}
+    if (!formData.fname) newErrors.fname = 'First name is required'
+    if (!formData.lname) newErrors.lname = 'Last name is required'
+    if (!formData.email) newErrors.email = 'Email is required'
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid'
+    if (!formData.phone) newErrors.phone = 'Phone number is required'
+    if (!formData.password) newErrors.password = 'Password is required'
+    else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters'
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match'
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handleAddAdmin = async (e) => {
+    e.preventDefault()
+    if (!validateForm()) return
+    
+    try {
+      const response = await axios.post('http://localhost/qadersheavennew/php/adduser.php', {
+        fname: formData.fname,
+        lname: formData.lname,
+        email: formData.email,
+        phone: formData.phone,
+        user_type: formData.user_type,
+        password: formData.password
+      })
+      
+      if (response.data.success) {
+        setShowAddAdmin(false)
+        setFormData({
+          fname: '',
+          lname: '',
+          email: '',
+          phone: '',
+          user_type: 'Staff',
+          password: '',
+          confirmPassword: ''
+        })
+        setrefresh(!refresh)
+      }
+    } catch (error) {
+      console.error('Error adding admin:', error)
+    }
+  }
+
   return (
-    <>
+    <div className="relative min-h-screen">
+      {/* Add Admin Modal */}
+      {showAddAdmin && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-800">Add New Admin</h2>
+                <button 
+                  onClick={() => setShowAddAdmin(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <form onSubmit={handleAddAdmin} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <User className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        name="fname"
+                        value={formData.fname}
+                        onChange={handleInputChange}
+                        className={`input-field pl-10 w-full ${errors.fname ? 'border-red-500' : ''}`}
+                        placeholder="John"
+                      />
+                    </div>
+                    {errors.fname && <p className="mt-1 text-sm text-red-600">{errors.fname}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                    <input
+                      type="text"
+                      name="lname"
+                      value={formData.lname}
+                      onChange={handleInputChange}
+                      className={`input-field w-full ${errors.lname ? 'border-red-500' : ''}`}
+                      placeholder="Doe"
+                    />
+                    {errors.lname && <p className="mt-1 text-sm text-red-600">{errors.lname}</p>}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Mail className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className={`input-field pl-10 w-full ${errors.email ? 'border-red-500' : ''}`}
+                      placeholder="email@example.com"
+                    />
+                  </div>
+                  {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Phone className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className={`input-field pl-10 w-full ${errors.phone ? 'border-red-500' : ''}`}
+                      placeholder="+880 1234-567890"
+                    />
+                  </div>
+                  {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                  <select
+                    name="user_type"
+                    value={formData.user_type}
+                    onChange={handleInputChange}
+                    className="input-field w-full"
+                  >
+                    <option value="Admin">Admin</option>
+                    <option value="Staff">Staff</option>
+                    <option value="Manager">Manager</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Lock className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className={`input-field pl-10 w-full ${errors.password ? 'border-red-500' : ''}`}
+                      placeholder="••••••"
+                    />
+                  </div>
+                  {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Lock className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="password"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      className={`input-field pl-10 w-full ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                      placeholder="••••••"
+                    />
+                  </div>
+                  {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddAdmin(false)}
+                    className="btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-primary flex items-center space-x-2">
+                    <UserPlus className="w-5 h-5" />
+                    <span>Add Admin</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Admin Management</h1>
             <p className="text-gray-600 mt-1">Manage system administrators</p>
           </div>
-          <button className="btn-primary flex items-center space-x-2">
-            <Plus className="w-5 h-5" />
+          <button 
+            onClick={() => setShowAddAdmin(true)}
+            className="btn-primary flex items-center space-x-2"
+          >
+            <UserPlus className="w-5 h-5" />
             <span>Add Admin</span>
           </button>
         </div>
@@ -131,7 +355,7 @@ const AdminManagement = () => {
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }
 

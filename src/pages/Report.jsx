@@ -44,6 +44,7 @@ const Report = () => {
       setBills(rows)
       setUnits(unitsRes || [])
       setTenants(tenantsRes || [])
+      console.log('Report Data:', tenantsRes)
       computeSummary(rows, unitsRes || [], tenantsRes || [])
     } catch (e) {
       console.error(e)
@@ -66,7 +67,7 @@ const Report = () => {
       return acc
     }, {})
 
-    const occupied = (allTenants || []).filter(t => (t.status || '').toLowerCase() === 'current').length
+    const occupied = (allTenants || []).filter(t => (t.Status || '').toLowerCase() === 'current').length
     const totalUnits = (allUnits || []).length
     const occupancyRate = totalUnits ? (occupied / totalUnits) : 0
 
@@ -111,9 +112,9 @@ const Report = () => {
       doc.text(`Period: ${start} to ${end}`, 10, y); y += 8
 
       if (summary) {
-        doc.text(`Total Billed: ৳${Number(summary.totalBilled).toLocaleString()}`, 10, y); y += 6
-        doc.text(`Collected (Paid): ৳${Number(summary.paidAmount).toLocaleString()}`, 10, y); y += 6
-        doc.text(`Outstanding: ৳${Number(summary.outstanding).toLocaleString()}`, 10, y); y += 6
+        doc.text(`Total Billed: BDT ${Number(summary.totalBilled).toLocaleString()}`, 10, y); y += 8
+        doc.text(`Collected (Paid): BDT ${Number(summary.paidAmount).toLocaleString()}`, 10, y); y += 8
+        doc.text(`Outstanding: BDT ${Number(summary.outstanding).toLocaleString()}`, 10, y); y += 8
         doc.text(`Collection Rate: ${(summary.collectionRate*100).toFixed(1)}%`, 10, y); y += 8
         doc.text(`Occupancy: ${summary.occupied}/${summary.totalUnits} (${(summary.occupancyRate*100).toFixed(1)}%)`, 10, y); y += 8
         const sc = summary.statusCounts || {}
@@ -136,7 +137,7 @@ const Report = () => {
         doc.text(String(b.bill_id), 10, y)
         doc.text(String(tenant).substring(0, 28), 35, y)
         doc.text(String(unit), 95, y)
-        doc.text(`৳${Number(b.amount).toLocaleString()}`, 125, y)
+        doc.text(`BDT${Number(b.amount).toLocaleString()}`, 125, y)
         doc.text(canonicalizeStatus(b.status), 160, y)
         y += 6
         if (y > 280) { doc.addPage(); y = 20 }
@@ -165,18 +166,16 @@ const Report = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
             <select className="input-field" value={reportType} onChange={(e)=>setReportType(e.target.value)}>
               <option>Financial</option>
-              <option>Occupancy</option>
-              <option>Maintenance</option>
-              <option>Payment</option>
+              
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-            <input type="date" className="input-field" value={start} onChange={(e)=>setStart(e.target.value)} />
+            <input type="date" required className="input-field" value={start} onChange={(e)=>setStart(e.target.value)} />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-            <input type="date" className="input-field" value={end} onChange={(e)=>setEnd(e.target.value)} />
+            <input type="date" required className="input-field" value={end} onChange={(e)=>setEnd(e.target.value)} />
           </div>
           <div className="flex items-end">
             <button type="button" onClick={handleGenerate} className="btn-primary flex items-center space-x-2 w-full justify-center" disabled={!start || !end || loading}>
