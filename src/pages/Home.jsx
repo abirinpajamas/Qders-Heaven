@@ -28,7 +28,7 @@ const Home = () => {
     },
     {
       title: 'Monthly Revenue',
-      value: `৳${homevalues.revenue || '0'}`,
+      value: `৳${Math.round(homevalues.revenue) || '0'}`,
       change: '+15%',
       trend: 'up',
       icon: DollarSign,

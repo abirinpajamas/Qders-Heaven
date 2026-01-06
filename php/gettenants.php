@@ -17,7 +17,7 @@ if ($conn->connect_error) {
 
 
 $sql = "SELECT
-    t.*,         
+    t.*,u.unit_id,         
     u.unit_number,u.base_rent,
     p.name AS property_name  -- Select the property name and alias it for clarity
 FROM

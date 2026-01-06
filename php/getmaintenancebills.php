@@ -14,19 +14,12 @@ if ($conn->connect_error) {
 }
 
 
-$sql = "SELECT 
-    b.bill_number, 
-    b.provider_id, 
-    p.provider_name, 
-    b.unit_id, 
-    u.unit_number, 
-    b.amount, 
-    b.description, 
-    b.bill_date, 
-    b.due_date
-FROM servbills b
-LEFT JOIN service_providers p ON b.provider_id = p.provider_id
-LEFT JOIN units u ON b.unit_id = u.unit_id";
+$sql = "SELECT b.bill_id, b.servprov_id, p.provider_name, 
+        b.unit_id, u.unit_number, b.amount,b.status,b.paid,b.`sevicename`, 
+        b.billdate, b.servicedate 
+        FROM servbills b 
+        LEFT JOIN servproviders p ON b.servprov_id = p.provider_id 
+        LEFT JOIN units u ON b.unit_id = u.unit_id";
 
 $result = $conn->query($sql);
 

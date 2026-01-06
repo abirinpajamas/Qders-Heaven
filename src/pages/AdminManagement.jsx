@@ -14,7 +14,8 @@ const AdminManagement = () => {
     lname: '',
     email: '',
     phone: '',
-    user_type: 'Staff',
+    username: '',
+    user_type: 'admin',
     password: '',
     confirmPassword: ''
   })
@@ -32,11 +33,7 @@ const AdminManagement = () => {
     
   }, [refresh])
   
-  const admins = [
-    { id: 1, name: 'Bismillahir Rahman', email: 'admin@qadersheaven.com', phone: '+880 1234-567890', role: 'Super Admin', status: 'Active' },
-    { id: 2, name: 'Ahmed Hassan', email: 'ahmed@qadersheaven.com', phone: '+880 1234-567891', role: 'Admin', status: 'Active' },
-    { id: 3, name: 'Fatima Khan', email: 'fatima@qadersheaven.com', phone: '+880 1234-567892', role: 'Manager', status: 'Active' },
-  ]
+
 
   const handledelete = async (id) => {
     setpopup(false)
@@ -57,6 +54,7 @@ const AdminManagement = () => {
     if (!formData.email) newErrors.email = 'Email is required'
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid'
     if (!formData.phone) newErrors.phone = 'Phone number is required'
+    if (!formData.username) newErrors.username = 'Username is required'
     if (!formData.password) newErrors.password = 'Password is required'
     else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters'
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match'
@@ -78,14 +76,17 @@ const AdminManagement = () => {
     if (!validateForm()) return
     
     try {
+      console.log('formData', formData)
       const response = await axios.post('http://localhost/qadersheavennew/php/adduser.php', {
         fname: formData.fname,
         lname: formData.lname,
         email: formData.email,
         phone: formData.phone,
+        username: formData.username,
         user_type: formData.user_type,
         password: formData.password
       })
+      console.log('response', response.data)
       
       if (response.data.success) {
         setShowAddAdmin(false)
@@ -94,7 +95,8 @@ const AdminManagement = () => {
           lname: '',
           email: '',
           phone: '',
-          user_type: 'Staff',
+          username: '',
+          user_type: 'admin',
           password: '',
           confirmPassword: ''
         })
@@ -157,6 +159,23 @@ const AdminManagement = () => {
                   </div>
                 </div>
 
+                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Mail className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      name="username"
+                      value={formData.username}
+                      onChange={handleInputChange}
+                      className={`input-field pl-10 w-full ${errors.username ? 'border-red-500' : ''}`}
+                      placeholder="username"
+                    />
+                  </div>
+                  {errors.username && <p className="mt-1 text-sm text-red-600">{errors.username}</p>}
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <div className="relative">
@@ -201,9 +220,8 @@ const AdminManagement = () => {
                     onChange={handleInputChange}
                     className="input-field w-full"
                   >
-                    <option value="Admin">Admin</option>
-                    <option value="Staff">Staff</option>
-                    <option value="Manager">Manager</option>
+                    <option value="admin">Admin</option>
+                    <option value="super admin">Super Admin</option>
                   </select>
                 </div>
 
@@ -277,18 +295,7 @@ const AdminManagement = () => {
           </button>
         </div>
 
-        <div className="card">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search admins..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field pl-10"
-            />
-          </div>
-        </div>
+        
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {userdata.map((admin) => (

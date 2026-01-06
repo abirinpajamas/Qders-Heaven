@@ -1,12 +1,32 @@
-import { Receipt, Download, Eye, Send } from 'lucide-react'
+import { X,Receipt, Download, Eye, Send } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+
+const paymentMethods = [
+  { value: 'cash', label: 'Cash' },
+  { value: 'bank_transfer', label: 'Bank Transfer' },
+  { value: 'check', label: 'Check' },
+  { value: 'credit_card', label: 'Credit Card' },
+  { value: 'other', label: 'Other' },
+];
 
 const TenantsBill = () => {
   const [bills, setBills] = useState([])
   const [refresh, setRefresh] = useState(false)
   const [property, setproperty] = useState([])
   const [selectedPropertyId, setSelectedPropertyId] = useState('all')
+  const [paymentBill, setPaymentBill] = useState(null)
+  const [paymentForm, setPaymentForm] = useState({
+    paid_on: '',
+    amount: '',
+    payment_method: 'cash',
+    reference: '',
+    note: '',
+    bill_type: 'rent'
+  })
+  const [paymentLoading, setPaymentLoading] = useState(false)
+  const [paymentError, setPaymentError] = useState('')
+  const [paymentSuccess, setPaymentSuccess] = useState('')
 
   useEffect(() => {
     fetch('http://localhost/qadersheavennew/php/getbills.php')
@@ -111,7 +131,7 @@ const displayBills = bills.filter(bill => {
               <th className="px-6 py-4 text-left text-sm font-semibold">Tenant</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">Unit</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">Month</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold">Amount</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold">Amount Due</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">Due Date</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">Action</th>
@@ -124,38 +144,135 @@ const displayBills = bills.filter(bill => {
                 <td className="px-6 py-4 text-sm text-gray-700">{bill.tenant_name || '-'}</td>
                 <td className="px-6 py-4 text-sm text-gray-700">{bill.unit_number}</td>
                 <td className="px-6 py-4 text-sm text-gray-700">{new Date(bill.period_start).toLocaleString('en-US', { month: 'long', year: 'numeric' })}</td>
-                <td className="px-6 py-4 text-sm font-medium text-gray-700">৳{Number(bill.amount).toLocaleString()}</td>
+                <td className="px-6 py-4 text-sm font-medium text-gray-700">৳{Number(bill.amount-bill.paid).toLocaleString()}</td>
                 <td className="px-6 py-4 text-sm text-gray-700">{bill.period_end}</td>
                 <td className="px-6 py-4">
-                  <select
-                    value={bill.status}
-                    onChange={(e) => handleStatusChange(bill.bill_id, e.target.value)}
-                    className="px-2 py-1 rounded border text-sm"
-                  >
-                    <option value="paid">Paid</option>
-                    <option value="pending">Pending</option>
-                    <option value="overdue">Overdue</option>
-                    <option value="unpaid">Unpaid</option>
-                  </select>
-                </td>
+  <span className={`inline-block px-2 py-1 rounded text-xs font-semibold 
+    ${bill.status === 'paid' ? 'bg-green-100 text-green-700' :
+      bill.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+      bill.status === 'overdue' ? 'bg-red-100 text-red-700' :
+      'bg-gray-100 text-gray-700'}`}
+  >
+    {bill.status.charAt(0).toUpperCase() + bill.status.slice(1)}
+  </span>
+</td>
                 <td className="px-6 py-4">
-                  <div className="flex items-center space-x-2">
-                    <button className="btn-icon bg-green-100 hover:bg-green-200 text-green-700">
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button className="btn-icon bg-blue-100 hover:bg-blue-200 text-blue-700">
-                      <Download className="w-4 h-4" />
-                    </button>
-                    <button className="btn-icon bg-purple-100 hover:bg-purple-200 text-purple-700">
-                      <Send className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
+  <div className="flex items-center space-x-2">
+    {/*<button className="btn-icon bg-green-100 hover:bg-green-200 text-green-700">
+      <Eye className="w-4 h-4" />
+    </button>
+    <button className="btn-icon bg-blue-100 hover:bg-blue-200 text-blue-700">
+      <Download className="w-4 h-4" />
+    </button>
+    <button className="btn-icon bg-purple-100 hover:bg-purple-200 text-purple-700">
+      <Send className="w-4 h-4" />
+    </button>*/}
+    <button
+      className="btn-icon bg-blue-100 hover:bg-blue-500 text-blue-900"
+      onClick={() => setPaymentBill(bill)}
+    >
+      Make Payment
+    </button>
+  </div>
+</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {/* Payment Modal */}
+      {paymentBill && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-[9999]">
+          <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-md relative">
+            <button
+              className="absolute top-4 right-4 p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+              onClick={() => { setPaymentBill(null); setPaymentForm({ paid_on: '', amount: '', payment_method: 'cash', reference: '', note: '' }); setPaymentError(''); setPaymentSuccess(''); }}
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <h2 className="text-xl font-bold mb-4">Make Payment for BILL-{paymentBill.bill_id}</h2>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setPaymentLoading(true);
+                setPaymentError('');
+                setPaymentSuccess('');
+                try {
+                  const res = await axios.post('http://localhost/qadersheavennew/php/addpayment.php', {
+                    bill_id: paymentBill.bill_id,
+                    bill_type: paymentForm.bill_type || 'rent',
+                    paid_on: paymentForm.paid_on,
+                    amount: paymentForm.amount,
+                    payment_method: paymentForm.payment_method,
+                    reference: paymentForm.reference,
+                    note: paymentForm.note
+                  });
+                  if (res.data && res.data.success) {
+                    setPaymentSuccess('Payment recorded successfully!');
+                    setTimeout(() => {
+                      setPaymentBill(null);
+                      setPaymentForm({ paid_on: '', amount: '', payment_method: 'cash', reference: '', note: '' });
+                      setRefresh(r => !r);
+                    }, 1200);
+                  } else {
+                    setPaymentError(res.data && res.data.message ? res.data.message : 'Failed to record payment.');
+                  }
+                } catch (err) {
+                  setPaymentError('Error recording payment.');
+                } finally {
+                  setPaymentLoading(false);
+                }
+              }}
+            >
+              <div className="mb-3">
+                <label className="block text-sm font-medium mb-1">Paid On</label>
+                <input type="date" className="w-full border rounded px-3 py-2" required
+                  value={paymentForm.paid_on}
+                  onChange={e => setPaymentForm(f => ({ ...f, paid_on: e.target.value }))} />
+              </div>
+              <div className="mb-3">
+                <label className="block text-sm font-medium mb-1">Amount</label>
+                <input type="number" className="w-full border rounded px-3 py-2" required min="1"
+                  value={paymentForm.amount}
+                  onChange={e => setPaymentForm(f => ({ ...f, amount: e.target.value }))} />
+              </div>
+              <div className="mb-3">
+                <label className="block text-sm font-medium mb-1">Payment Method</label>
+                <select className="w-full border rounded px-3 py-2"
+                  value={paymentForm.payment_method}
+                  onChange={e => setPaymentForm(f => ({ ...f, payment_method: e.target.value }))}
+                  required
+                >
+                  {paymentMethods.map(m => (
+                    <option key={m.value} value={m.value}>{m.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="mb-3">
+                <label className="block text-sm font-medium mb-1">Reference Number</label>
+                <input type="text" className="w-full border rounded px-3 py-2"
+                  value={paymentForm.reference}
+                  onChange={e => setPaymentForm(f => ({ ...f, reference: e.target.value }))} />
+              </div>
+              <div className="mb-3">
+                <label className="block text-sm font-medium mb-1">Note</label>
+                <textarea className="w-full border rounded px-3 py-2"
+                  value={paymentForm.note}
+                  onChange={e => setPaymentForm(f => ({ ...f, note: e.target.value }))} />
+              </div>
+              {paymentError && <div className="text-red-600 text-sm mb-2">{paymentError}</div>}
+              {paymentSuccess && <div className="text-green-600 text-sm mb-2">{paymentSuccess}</div>}
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-60"
+                disabled={paymentLoading}
+              >
+                {paymentLoading ? 'Processing...' : 'Submit Payment'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

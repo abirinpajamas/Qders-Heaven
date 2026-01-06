@@ -31,7 +31,7 @@ $queries = [
     'duebills_count' => "SELECT COUNT(*) FROM bills WHERE status IN ('unpaid', 'pending', 'overdue');",
     
     // Sum of amounts paid this month
-    'revenue' => "SELECT SUM(paid_amount) AS total_paid FROM payments WHERE YEAR(paid_on) = YEAR(CURDATE()) AND MONTH(paid_on) = MONTH(CURDATE());"
+    'revenue' => "SELECT SUM(amount) AS total_paid FROM payments WHERE YEAR(paid_on) = YEAR(CURDATE()) AND MONTH(paid_on) = MONTH(CURDATE()) And servbill_id is null;"
 ];
 
 // Initialize the final response array

@@ -35,6 +35,10 @@ const TenantsDetails = () => {
   const [popup,setpopup]=useState(false);
   const [selectedId,setselectedId]=useState(null);
   const [refresh,setrefresh]=useState(false);
+  const [editing,setEditing]=useState({id:null, field:null});
+  const [tempValue,setTempValue]=useState("");
+  const [showinput,setshowinput]=useState(false);
+  const[baseRent,setBaseRent]=useState(0);
 
 
 
@@ -70,7 +74,21 @@ const TenantsDetails = () => {
 
   },[])
 
-
+  const Editablefield=({id,field,value,onSave})=>{
+    const isediting=editing.id===id && editing.field===field;
+    
+    if(isediting){
+      return(
+        <input
+           autoFocus
+           className="border-b border-primary-500 outline-none bg-transparent w-full text-gray-800"
+           value={tempValue}
+           onChange={(e)=>setTempValue(e.target.value)}
+        
+        />
+      )
+    }
+  }
 
   const handlesubmit=async (e)=>{
 
@@ -122,6 +140,25 @@ const TenantsDetails = () => {
     }
   }
 
+  const updatetenant = async () => {
+    try{
+      const response = await axios.post('http://localhost/qadersheavennew/php/updatetenant.php', { 
+        unit_id: editing.id,
+        field: editing.field,
+        value: editing.field === 'base_rent' ? baseRent : name
+      })
+      console.log(response.data)
+      setrefresh(!refresh)
+      setEditing({id:null,field:null})
+      setBaseRent('')
+      setName('')
+    } catch(err){
+      console.error(err)
+      setEditing({id:null,field:null})
+      setBaseRent('')
+      setName('')
+    }
+  }
   return (
     <>
     <div className="space-y-6">
@@ -147,8 +184,36 @@ const TenantsDetails = () => {
                 {tenant.status}
               </span>
             </div>
-            
-            <h3 className="text-lg font-bold text-gray-800 mb-1">{tenant.name}</h3>
+            <div className="flex items-center space-x-2"> {/* space-x-2 adds the gap */}
+  <h3 className="text-lg font-bold text-gray-800">
+    <span 
+      
+    > 
+      {editing.id === tenant.tenant_id && editing.field === 'name' ? (
+        <input 
+          type="text" 
+          value={name}
+          className="border-b-2 border-blue-500 outline-none bg-transparent" 
+          onChange={(e) => setName(e.target.value)} 
+          onBlur={() => setEditing({id: null, field: null})} 
+          autoFocus
+        /> 
+      ) : (
+        tenant.name
+      )}
+    </span>
+  </h3>
+
+  {/* Only show the button when NOT editing */}
+  {!(editing.id === tenant.tenant_id && editing.field === 'name') && (
+    <button 
+      className="p-1 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+      onClick={() => { setEditing({id: tenant.tenant_id, field: 'name'}); }}
+    >
+      <Edit className="w-3 h-3" />
+    </button>
+  )}
+</div>
             <p className="text-sm text-primary-600 font-medium mb-4">{tenant.unit_number}, {tenant.property_name}</p>
             
             <div className="space-y-2 mb-4">
@@ -168,16 +233,42 @@ const TenantsDetails = () => {
 
             <div className="pt-4 border-t border-gray-200">
               <div className="flex items-center justify-between mb-3">
+                
+                
                 <span className="text-sm text-gray-600">Monthly Rent</span>
-                <span className="text-lg font-bold text-primary-600">৳{tenant.base_rent.toLocaleString()}</span>
+                <div>
+                <span className="text-lg font-bold text-primary-600">
+                  {
+                    editing.id === tenant.unit_id && editing.field === 'base_rent' ? (
+                      <input 
+                        type="number" 
+                        value={null}
+                        className="w-20 border-b-2 border-blue-500 outline-none bg-transparent" 
+                        onChange={(e) => setBaseRent(e.target.value)} 
+                        onBlur={() => baseRent>0? updatetenant():setEditing({ id: null, field: null })} 
+                        autoFocus
+                      /> 
+                    ) : (
+                      '৳' + tenant.base_rent.toLocaleString()
+                    )
+                  }
+                </span>
+
+                {!(editing.id === tenant.unit_id && editing.field === 'base_rent') && (
+                  <button 
+                    className="p-1 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                    onClick={() => { setEditing({id: tenant.unit_id, field: 'base_rent'}); }}
+                  >
+                    <Edit className="w-3 h-3" />
+                  </button>
+                )}
+                </div>
               </div>
               <div className="flex items-center space-x-2">
                 <button className="flex-1 btn-icon bg-green-100 hover:bg-green-200 text-green-700">
                   <Eye className="w-4 h-4" />
                 </button>
-                <button className="flex-1 btn-icon bg-blue-100 hover:bg-blue-200 text-blue-700">
-                  <Edit className="w-4 h-4" />
-                </button>
+                
                 <button className="flex-1 btn-icon bg-red-100 hover:bg-red-200 text-red-700" onClick={() => { setpopup(true); setselectedId(tenant.tenant_id); }}>
                   <Trash2 className="w-4 h-4" />
                 </button>

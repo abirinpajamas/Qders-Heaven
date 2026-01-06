@@ -8,35 +8,7 @@ const PropertyStatus = () => {
   const [totalunits,settotalunits]=useState(0)
   const [occupiedunits,setoccupiedunits]=useState(0)
   const [vacantunits,setvacantunits]=useState(0)
-  const properties = [
-    {
-      id: 1,
-      name: 'Rangs Qaders Heaven',
-      totalUnits: 20,
-      occupied: 15,
-      vacant: 5,
-      maintenance: 0,
-      occupancyRate: 75
-    },
-    {
-      id: 2,
-      name: 'Green Valley Apartments',
-      totalUnits: 32,
-      occupied: 28,
-      vacant: 3,
-      maintenance: 1,
-      occupancyRate: 87.5
-    },
-    {
-      id: 3,
-      name: 'Sunset Heights',
-      totalUnits: 24,
-      occupied: 20,
-      vacant: 4,
-      maintenance: 0,
-      occupancyRate: 83.3
-    }
-  ]
+  
 
   useEffect(()=>{
     fetch('http://localhost/qadersheavennew/php/getpropertystatus.php')
@@ -54,16 +26,20 @@ const PropertyStatus = () => {
 
   
 
-  },[statusdata, unitdata])
-
-
-
-  useEffect(()=>{
-   settotalunits(statusdata.reduce((acc,prop)=>{return acc+Number(prop.total_units)}, 0))
-   setoccupiedunits(unitdata.reduce((acc,prop)=>{return acc+Number(prop.unit_count)}, 0))
-   setvacantunits(totalunits - occupiedunits)
-
   },[])
+
+
+
+  useEffect(() => {
+  if (statusdata.length > 0) {
+    const total = statusdata.reduce((acc, prop) => acc + Number(prop.total_units), 0);
+    const occupied = unitdata.reduce((acc, prop) => acc + Number(prop.unit_count), 0);
+    
+    settotalunits(total);
+    setoccupiedunits(occupied);
+    setvacantunits(total - occupied);
+  }
+}, [statusdata, unitdata]);
 
   return (
     <div className="space-y-6">

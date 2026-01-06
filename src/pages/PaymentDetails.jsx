@@ -1,54 +1,59 @@
 import { CreditCard, CheckCircle, Clock, XCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 
 const PaymentDetails = () => {
-  const payments = [
-    {
-      id: 1,
-      transactionId: 'TXN-2024-001',
-      tenant: 'Ahmed Rahman',
-      unit: 'Unit 2',
-      amount: 31800,
-      date: '2024-01-28',
-      method: 'Bank Transfer',
-      status: 'Completed'
-    },
-    {
-      id: 2,
-      transactionId: 'TXN-2024-002',
-      tenant: 'Nasrin Akter',
-      unit: 'Unit 7',
-      amount: 31800,
-      date: '2024-01-27',
-      method: 'Cash',
-      status: 'Completed'
-    },
-    {
-      id: 3,
-      transactionId: 'TXN-2024-003',
-      tenant: 'Fatima Begum',
-      unit: 'Unit 5',
-      amount: 31800,
-      date: '2024-01-26',
-      method: 'Online Payment',
-      status: 'Pending'
-    },
-    {
-      id: 4,
-      transactionId: 'TXN-2024-004',
-      tenant: 'Karim Hossain',
-      unit: 'Unit 1',
-      amount: 31800,
-      date: '2024-01-25',
-      method: 'Bank Transfer',
-      status: 'Failed'
-    }
-  ]
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date();
+    d.setDate(1);
+    return d.toISOString().slice(0, 10);
+  });
+  const [endDate, setEndDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPayments = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.post('http://localhost/qadersheavennew/php/getpayments.php', {
+          start_date: startDate,
+          end_date: endDate
+        });
+        console.log("Payment data:", res.data);
+        if (res.data && res.data.success) {
+          setPayments(res.data.payments || []);
+        }
+      } catch (err) {
+        // handle error
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPayments();
+  }, [startDate, endDate]);
+
+   
+
+  // Calculate stats
+  const totalCollected = payments.reduce((sum, p) => sum + (p.amount ? Number(p.amount) : 0), 0);
+  const pending = payments.filter(p => p.bill_status === 'partially paid' || p.bill_status === 'unpaid');
+  const failed = payments.filter(p => p.bill_status === 'failed');
+  const completed = payments.filter(p => p.bill_status === 'paid');
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800">Payment Details</h1>
-        <p className="text-gray-600 mt-1">Track all payment transactions</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Payment Details</h1>
+          <p className="text-gray-600 mt-1">Track all payment transactions</p>
+        </div>
+        <div className="flex flex-col md:flex-row items-center gap-2">
+          <label className="text-sm text-gray-600">From:</label>
+          <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="border rounded px-2 py-1 text-sm" />
+          <label className="text-sm text-gray-600">To:</label>
+          <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="border rounded px-2 py-1 text-sm" />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -57,17 +62,17 @@ const PaymentDetails = () => {
             <p className="text-sm text-gray-600">Total Collected</p>
             <CheckCircle className="w-5 h-5 text-green-600" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-800">৳2,54,400</h3>
+          <h3 className="text-2xl font-bold text-gray-800">৳{totalCollected}</h3>
           <p className="text-sm text-green-600 mt-2">This month</p>
         </div>
 
         <div className="card">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-600">Pending</p>
+            <p className="text-sm text-gray-600">Due</p>
             <Clock className="w-5 h-5 text-yellow-600" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-800">৳63,600</h3>
-          <p className="text-sm text-yellow-600 mt-2">2 payments</p>
+          <h3 className="text-2xl font-bold text-gray-800">৳{pending.reduce((sum, p) => sum + (p.due ? Number(p.due) : 0), 0)}</h3>
+          <p className="text-sm text-yellow-600 mt-2">{pending.length} payments</p>
         </div>
 
         <div className="card">
@@ -75,8 +80,8 @@ const PaymentDetails = () => {
             <p className="text-sm text-gray-600">Failed</p>
             <XCircle className="w-5 h-5 text-red-600" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-800">৳31,800</h3>
-          <p className="text-sm text-red-600 mt-2">1 payment</p>
+          <h3 className="text-2xl font-bold text-gray-800">৳{failed.reduce((sum, p) => sum + (p.amount ? Number(p.amount) : 0), 0)}</h3>
+          <p className="text-sm text-red-600 mt-2">{failed.length} payment</p>
         </div>
 
         <div className="card">
@@ -84,7 +89,7 @@ const PaymentDetails = () => {
             <p className="text-sm text-gray-600">Total Transactions</p>
             <CreditCard className="w-5 h-5 text-blue-600" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-800">156</h3>
+          <h3 className="text-2xl font-bold text-gray-800">{payments.length}</h3>
           <p className="text-sm text-blue-600 mt-2">All time</p>
         </div>
       </div>
@@ -105,12 +110,12 @@ const PaymentDetails = () => {
           <tbody>
             {payments.map((payment) => (
               <tr key={payment.id} className="table-row">
-                <td className="px-6 py-4 text-sm font-medium text-gray-700">{payment.transactionId}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{payment.tenant}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{payment.unit}</td>
+                <td className="px-6 py-4 text-sm font-medium text-gray-700">{payment.payment_id}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{payment.tenant_name}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{payment.unit_number}</td>
                 <td className="px-6 py-4 text-sm font-medium text-gray-700">৳{payment.amount.toLocaleString()}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{payment.date}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{payment.method}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{payment.paid_on}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{payment.payment_method}</td>
                 <td className="px-6 py-4">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                     payment.status === 'Completed' 

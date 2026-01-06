@@ -1,11 +1,18 @@
 <?php
 include("database.php");
 
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Origin:*"); // More secure than *
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Content-Type: application/json");
 
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    // If it's an OPTIONS request, return 200 OK and exit immediately
+    http_response_code(200);
+    exit();
+}
+
+// 3. Now check for POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(["success" => false, "message" => "Method Not Allowed"]);
@@ -33,7 +40,7 @@ if (!$stmt) {
     echo json_encode(["success" => false, "message" => "Prepare failed: " . $conn->error]);
     exit();
 }
-$stmt->bind_param("iidss", $provider_id, $unit_id, $amount, $description, $servicedate);
+$stmt->bind_param("iiiss", $provider_id, $unit_id, $amount, $description, $servicedate);
 
 if ($stmt->execute()) {
     echo json_encode(["success" => true, "message" => "Maintenance bill created successfully."]);
