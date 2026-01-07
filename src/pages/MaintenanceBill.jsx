@@ -1,4 +1,4 @@
-import { FileText, Download, Eye, Plus } from 'lucide-react'
+import { FileText, Download, Eye, Plus, Trash2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { Link } from 'react-router-dom'
@@ -41,6 +41,8 @@ const MaintenanceBill = () => {
   const [paymentLoading, setPaymentLoading] = useState(false)
   const [paymentError, setPaymentError] = useState('')
   const [paymentSuccess, setPaymentSuccess] = useState('')
+  const [deletePopup, setDeletePopup] = useState(false)
+  const [selectedBillId, setSelectedBillId] = useState(null)
 
     
 
@@ -99,6 +101,22 @@ const MaintenanceBill = () => {
       }
     } catch (error) {
       console.error('Error creating maintenance bill:', error)
+    }
+  }
+
+  const handleDeleteBill = async (bill_id) => {
+    setDeletePopup(false)
+    try {
+      const response = await axios.post('http://localhost/qadersheavennew/php/deletemaintenancebill.php', { id: bill_id })
+      if (response.data && response.data.success) {
+        setBills(prev => prev.filter(b => b.bill_id !== bill_id))
+        setRefresh(r => !r)
+      } else {
+        alert(response.data.message || 'Failed to delete maintenance bill')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Error deleting maintenance bill')
     }
   }
 
@@ -259,7 +277,7 @@ const MaintenanceBill = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Provider</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>                
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount Due</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -281,7 +299,7 @@ const MaintenanceBill = () => {
                     {bill.unit_number}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${Number(bill.amount).toFixed(2)}
+                    ${Number(bill.amount-bill.paid).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {bill.status}
@@ -292,12 +310,18 @@ const MaintenanceBill = () => {
                   
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
- 
+
   <button
     className="bg-blue-100 hover:bg-blue-500 text-blue-900 px-2 py-1 rounded"
     onClick={() => setPaymentBill(bill)}
   >
     Make Payment
+  </button>
+  <button 
+    className="btn-icon bg-red-100 hover:bg-red-200 text-red-700"
+    onClick={() => { setDeletePopup(true); setSelectedBillId(bill.bill_id); }}
+  >
+    <Trash2 className="w-4 h-4" />
   </button>
 </div>
                   </td>
@@ -369,6 +393,7 @@ const MaintenanceBill = () => {
               <label className="block text-sm font-medium mb-1">Amount</label>
               <input type="number" className="w-full border rounded px-3 py-2" required min="1"
                 value={paymentForm.amount}
+                placeholder={paymentBill.amount-paymentBill.paid}
                 onChange={e => setPaymentForm(f => ({ ...f, amount: e.target.value }))} />
             </div>
             <div className="mb-3">
@@ -406,6 +431,36 @@ const MaintenanceBill = () => {
               {paymentLoading ? 'Processing...' : 'Submit Payment'}
             </button>
           </form>
+        </div>
+      </div>
+    )}
+    
+    {/* Delete Confirmation Popup */}
+    {deletePopup && (
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50">
+        <div className="bg-white w-full max-w-sm mx-auto rounded-2xl shadow-2xl p-6 space-y-4 border border-red-100">
+          <h2 className="text-xl font-semibold text-center text-red-700 mb-4">
+            Confirm Deletion
+          </h2>
+          <p className="text-gray-700 text-center">
+            Are you sure you want to delete this maintenance bill? This action cannot be undone.
+          </p>
+          <div className="flex justify-between mt-6">
+            <button
+              type="button"
+              onClick={() => setDeletePopup(false)}
+              className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDeleteBill(selectedBillId)}
+              className="px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 shadow-sm transition"
+            >
+              Delete
+            </button>
+          </div>
         </div>
       </div>
     )}

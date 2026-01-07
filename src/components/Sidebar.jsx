@@ -36,28 +36,55 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const menuItems = [
     { path: '/', icon: Home, label: 'Home' },
     { path: '/tenant-portal', icon: UserCheck, label: 'Tenant Portal' },
-    { path: '/admin-management', icon: Users, label: 'Admin Management' },
     { path: '/report', icon: FileText, label: 'Report' },
-    { path: '/fund', icon: DollarSign, label: 'Fund' },
-    
+    { path: '/payment-details', icon: CreditCard, label: 'Payment Details' },
+
     // Maintenance Section
+    {
+      section: 'Management',
+      icon: Users,
+      items: [
+        { path: '/admin-management', icon: Users, label: 'Admin Management' },
+        { path: '/tenants-details', icon: UserCheck, label: 'Tenants Details' }
+      ]
+    },
+
+    {
+      section: 'Properties',
+      icon: Building2,
+      items: [
+        { path: '/property', icon: Building2, label: 'Property' },
+    { path: '/unit-entry', icon: DoorOpen, label: 'Units' },
+    { path: '/property-status', icon: CheckSquare, label: 'Property Status' },
+      ]
+    },
+    
+    {
+      section: 'Financials',
+      icon: DollarSign,
+      items: [
+       { path: '/fund', icon: DollarSign, label: 'Fund' },
+       { path: '/tenants-bill-generate', icon: FileSpreadsheet, label: "Tenant's Bill Generate" },
+       { path: '/tenants-bill', icon: Receipt, label: 'Tenants Bill' },
+       { path: '/maintenance-bill', icon: FileText, label: 'Maintenance Bills' }
+
+
+      ]
+    },
+
     {
       section: 'Maintenance',
       icon: Wrench,
       items: [
         { path: '/service-provider-contact', icon: Phone, label: 'Service Provider Contact' },
-        { path: '/maintenance-bill', icon: FileText, label: 'Maintenance Bills' }
       ]
     },
+     
     
-    { path: '/property', icon: Building2, label: 'Property' },
-    { path: '/unit-entry', icon: DoorOpen, label: 'Unit Entry' },
-    { path: '/property-status', icon: CheckSquare, label: 'Property Status' },
-    { path: '/tenants-details', icon: UserCheck, label: 'Tenants Details' },
+    
+    
+    
     { path: '/tenants-highlights', icon: Star, label: "Tenant's Highlights" },
-    { path: '/tenants-bill-generate', icon: FileSpreadsheet, label: "Tenant's Bill Generate" },
-    { path: '/tenants-bill', icon: Receipt, label: 'Tenants Bill' },
-    { path: '/payment-details', icon: CreditCard, label: 'Payment Details' },
     
     // Settings Section
     {
@@ -137,7 +164,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           <div className="flex items-center space-x-3">
             <Building2 className="w-8 h-8 text-primary-400" />
             <div>
-              <h1 className="text-xl font-bold">Qader's Heaven</h1>
+              <h1 className="text-xl font-bold">Property Heaven</h1>
               <p className="text-xs text-gray-400">Admin Panel</p>
             </div>
           </div>

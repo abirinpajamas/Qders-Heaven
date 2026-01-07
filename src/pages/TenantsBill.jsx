@@ -1,4 +1,4 @@
-import { X,Receipt, Download, Eye, Send } from 'lucide-react'
+import { X,Receipt, Download, Eye, Send, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 
@@ -27,6 +27,8 @@ const TenantsBill = () => {
   const [paymentLoading, setPaymentLoading] = useState(false)
   const [paymentError, setPaymentError] = useState('')
   const [paymentSuccess, setPaymentSuccess] = useState('')
+  const [deletePopup, setDeletePopup] = useState(false)
+  const [selectedBillId, setSelectedBillId] = useState(null)
 
   useEffect(() => {
     fetch('http://localhost/qadersheavennew/php/getbills.php')
@@ -76,6 +78,22 @@ const displayBills = bills.filter(bill => {
     }
   }
 
+  const handleDeleteBill = async (bill_id) => {
+    setDeletePopup(false)
+    try {
+      const response = await axios.post('http://localhost/qadersheavennew/php/deletebill.php', { id: bill_id })
+      if (response.data && response.data.success) {
+        setBills(prev => prev.filter(b => b.bill_id !== bill_id))
+        setRefresh(r => !r)
+      } else {
+        alert(response.data.message || 'Failed to delete bill')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Error deleting bill')
+    }
+  }
+
  
   
   return (
@@ -99,8 +117,8 @@ const displayBills = bills.filter(bill => {
           <h3 className="text-3xl font-bold">{bills.filter(b => b.status==='unpaid').length}</h3>
         </div>
         <div className="card bg-gradient-to-br from-red-500 to-red-600 text-white">
-          <p className="text-red-100 mb-2">Overdue</p>
-          <h3 className="text-3xl font-bold">{bills.filter(b => b.status==='overdue').length}</h3>
+          <p className="text-red-100 mb-2">Partially Paid</p>
+          <h3 className="text-3xl font-bold">{bills.filter(b => b.status==='partially paid').length}</h3>
         </div>
       </div>
       <div className="flex justify-end"> {/* Use flex to push content to the right */}
@@ -149,8 +167,8 @@ const displayBills = bills.filter(bill => {
                 <td className="px-6 py-4">
   <span className={`inline-block px-2 py-1 rounded text-xs font-semibold 
     ${bill.status === 'paid' ? 'bg-green-100 text-green-700' :
-      bill.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-      bill.status === 'overdue' ? 'bg-red-100 text-red-700' :
+      bill.status === 'unpaid' ? 'bg-yellow-100 text-yellow-700' :
+      bill.status === 'partially paid' ? 'bg-orange-100 text-orange-700' : 
       'bg-gray-100 text-gray-700'}`}
   >
     {bill.status.charAt(0).toUpperCase() + bill.status.slice(1)}
@@ -172,6 +190,12 @@ const displayBills = bills.filter(bill => {
       onClick={() => setPaymentBill(bill)}
     >
       Make Payment
+    </button>
+    <button 
+      className="btn-icon bg-red-100 hover:bg-red-200 text-red-700"
+      onClick={() => { setDeletePopup(true); setSelectedBillId(bill.bill_id); }}
+    >
+      <Trash2 className="w-4 h-4" />
     </button>
   </div>
 </td>
@@ -270,6 +294,36 @@ const displayBills = bills.filter(bill => {
                 {paymentLoading ? 'Processing...' : 'Submit Payment'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+      
+      {/* Delete Confirmation Popup */}
+      {deletePopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50">
+          <div className="bg-white w-full max-w-sm mx-auto rounded-2xl shadow-2xl p-6 space-y-4 border border-red-100">
+            <h2 className="text-xl font-semibold text-center text-red-700 mb-4">
+              Confirm Deletion
+            </h2>
+            <p className="text-gray-700 text-center">
+              Are you sure you want to delete this bill? This action cannot be undone.
+            </p>
+            <div className="flex justify-between mt-6">
+              <button
+                type="button"
+                onClick={() => setDeletePopup(false)}
+                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteBill(selectedBillId)}
+                className="px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 shadow-sm transition"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

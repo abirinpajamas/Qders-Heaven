@@ -21,18 +21,20 @@ if ($conn->connect_error) {
 
 // 1. Define all necessary SQL queries
 $queries = [
-    // Count of currently active tenants
     'tenants_count' => "SELECT COUNT(*) FROM Tenants WHERE status = 'Current';",
-    
-    // Count of total properties
     'properties_count' => "SELECT COUNT(*) FROM properties;",
-    
-    // Count of unpaid/pending/overdue bills
     'duebills_count' => "SELECT COUNT(*) FROM bills WHERE status IN ('unpaid', 'pending', 'overdue');",
     
-    // Sum of amounts paid this month
-    'revenue' => "SELECT SUM(amount) AS total_paid FROM payments WHERE YEAR(paid_on) = YEAR(CURDATE()) AND MONTH(paid_on) = MONTH(CURDATE()) And servbill_id is null;"
-];
+    // Revenue - Current Month
+    'revenue' => "SELECT SUM(amount) FROM payments WHERE YEAR(paid_on) = YEAR(CURDATE()) AND MONTH(paid_on) = MONTH(CURDATE()) AND servbill_id IS NULL;",
+    
+    // Revenue - Previous Month
+    'prev_revenue' => "SELECT SUM(amount) FROM payments WHERE paid_on >= DATE_FORMAT(CURDATE() - INTERVAL 1 MONTH, '%Y-%m-01') AND paid_on < DATE_FORMAT(CURDATE(), '%Y-%m-01') AND servbill_id IS NULL;",
+
+    // Property Growth
+    'properties_prev' => "SELECT COUNT(*) FROM properties WHERE created_at < DATE_FORMAT(CURDATE(), '%Y-%m-01');",
+    // Tenant Growth
+    'tenants_prev' => "SELECT COUNT(*) FROM Tenants WHERE created_at < DATE_FORMAT(CURDATE(), '%Y-%m-01');",];
 
 // Initialize the final response array
 $response_data = [];

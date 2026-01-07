@@ -19,11 +19,15 @@ import PaymentDetails from './pages/PaymentDetails'
 import Settings from './pages/Settings'
 import BasicSettings from './pages/BasicSettings'
 import MaintenanceBill from './pages/MaintenanceBill'
+import AdminPortal from './pages/AdminPortal'
+import TenantLogin from './pages/TenantLogin'
 
 function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/signin" element={<TenantLogin />} />
+        <Route path="/admin-signin" element={<AdminPortal />} />
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="tenant-portal" element={<TenantPortal />} />

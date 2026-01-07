@@ -13,32 +13,32 @@ const Home = () => {
     {
       title: 'Total Properties',
       value:  homevalues.properties_count || '0',
-      change: '+12%',
-      trend: 'up',
+      change: `${(((homevalues.properties_count - homevalues.properties_prev) / homevalues.properties_prev) * 100).toFixed(0)}%`,
+      trend: homevalues.properties_count >= homevalues.properties_prev ? 'up' : 'down',
       icon: Building2,
       color: 'bg-blue-500'
     },
     {
       title: 'Active Tenants',
       value: homevalues.tenants_count || '0',
-      change: '+8%',
-      trend: 'up',
+      change: `${(((homevalues.tenants_count - homevalues.tenants_prev) / homevalues.tenants_prev) * 100).toFixed(0)}%`,
+      trend: homevalues.tenants_count >= homevalues.tenants_prev ? 'up' : 'down',
       icon: Users,
       color: 'bg-green-500'
     },
     {
       title: 'Monthly Revenue',
       value: `৳${Math.round(homevalues.revenue) || '0'}`,
-      change: '+15%',
-      trend: 'up',
+      change: `${(((homevalues.revenue - homevalues.prev_revenue) / homevalues.prev_revenue) * 100).toFixed(0)}%`,
+      trend: homevalues.tenants_count >= homevalues.tenants_prev ? 'up' : 'down',
       icon: DollarSign,
       color: 'bg-purple-500'
     },
     {
       title: 'Pending Bills',
       value: homevalues.duebills_count || '0',
-      change: '-5%',
-      trend: 'down',
+      //change: '-5%',
+      //trend: 'down',
       icon: FileText,
       color: 'bg-orange-500'
     }
@@ -86,16 +86,20 @@ useEffect(()=>{
               <div>
                 <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
                 <h3 className="text-2xl font-bold text-gray-800">{stat.value}</h3>
-                <div className="flex items-center mt-2">
-                  {stat.trend === 'up' ? (
-                    <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                  ) : (
-                    <TrendingDown className="w-4 h-4 text-red-500 mr-1" />
-                  )}
-                  <span className={`text-sm ${stat.trend === 'up' ? 'text-green-500' : 'text-red-500'}`}>
-                    {stat.change}
-                  </span>
-                </div>
+ <div className="flex items-center mt-2">
+  {stat.trend && (
+    <>
+      {stat.trend === 'up' ? (
+        <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+      ) : (
+        <TrendingDown className="w-4 h-4 text-red-500 mr-1" />
+      )}
+      <span className={`text-sm ${stat.trend === 'up' ? 'text-green-500' : 'text-red-500'}`}>
+        {stat.change}
+      </span>
+    </>
+  )}
+</div>
               </div>
               <div className={`${stat.color} p-4 rounded-lg`}>
                 <stat.icon className="w-8 h-8 text-white" />

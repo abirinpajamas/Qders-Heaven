@@ -16,6 +16,16 @@ const TenantsBillGenerate = () => {
   const [note, setNote] = useState('')
   const [pdfUrl, setPdfUrl] = useState(null)
   const [popup, setpopup] = useState(false);
+  const now = new Date();
+  const [monthlyBillsForm, setMonthlyBillsForm] = useState({
+    startperiod: new Date(now.getFullYear(), now.getMonth(), 2)
+  .toISOString().split('T')[0],
+    endperiod: new Date(now.getFullYear(), now.getMonth()+1, 0)
+  .toISOString().split('T')[0]
+  });
+  const [monthlyBillsLoading, setMonthlyBillsLoading] = useState(false);
+  const [monthlyBillsError, setMonthlyBillsError] = useState('');
+  const [monthlyBillsSuccess, setMonthlyBillsSuccess] = useState('');
 
   // Load jsPDF UMD from CDN once
   useEffect(() => {
@@ -66,6 +76,35 @@ const TenantsBillGenerate = () => {
 
     }catch(err){
     console.error(err)
+  }
+}
+
+const handleGenerateMonthlyBills = async () => {
+  setMonthlyBillsLoading(true);
+  setMonthlyBillsError('');
+  setMonthlyBillsSuccess('');
+  console.log(monthlyBillsForm)
+  
+  try {
+    const response = await axios.post('http://localhost/qadersheavennew/php/generatemonthlybills.php', {
+      startperiod: monthlyBillsForm.startperiod,
+      endperiod: monthlyBillsForm.endperiod
+    });
+    console.log('res:',response.data)
+    if (response.data.success) {
+      setMonthlyBillsSuccess(response.data.message);
+      setTimeout(() => {
+        setpopup(false);
+        setMonthlyBillsForm({ startperiod: '', endperiod: '' });
+        setMonthlyBillsSuccess('');
+      }, 2000);
+    } else {
+      setMonthlyBillsError(response.data.message);
+    }
+  } catch (error) {
+    setMonthlyBillsError('Failed to generate monthly bills. Please try again.');
+  } finally {
+    setMonthlyBillsLoading(false);
   }
 }
 
@@ -179,9 +218,21 @@ const TenantsBillGenerate = () => {
   return (
     <>
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800">Tenant's Bill Generate</h1>
-        <p className="text-gray-600 mt-1">Generate bills for tenants</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Tenant's Bill Generate</h1>
+          <p className="text-gray-600 mt-1">Generate bills for tenants</p>
+        </div>
+        <button 
+          onClick={() => setpopup(true)}
+          className="btn-primary flex items-center space-x-2 hover:bg-blue-700"
+        >
+          <Calendar className="w-5 h-5" />
+          <div className="flex flex-col items-end leading-tight">
+            <span className="font-medium">Generate Monthly Bills</span>
+            <span className="text-[10px] opacity-80">For all Tenants</span>
+          </div>
+        </button>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -315,13 +366,7 @@ const TenantsBillGenerate = () => {
       
       <div className="card">
         <h2 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="p-4 bg-primary-50 hover:bg-primary-100 rounded-lg text-left transition-colors" 
-          onClick={() => setpopup(true)}>
-            <Calendar className="w-8 h-8 text-primary-600 mb-2" />
-            <h3 className="font-medium text-gray-800" >Generate Monthly Bills</h3>
-            <p className="text-sm text-gray-600 mt-1">For all tenants</p>
-          </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button className="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-left transition-colors"
           onClick={() => setpopup(true)}>
             <FileSpreadsheet className="w-8 h-8 text-green-600 mb-2" />
@@ -340,29 +385,75 @@ const TenantsBillGenerate = () => {
     </div>
      {popup && (
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50">
-        <div className="bg-white w-full max-w-sm mx-auto rounded-2xl shadow-2xl p-6 space-y-4 border border-red-100">
+        <div className="bg-white w-full max-w-md mx-auto rounded-2xl shadow-2xl p-6 space-y-4 border border-red-100">
           <h2 className="text-xl font-semibold text-center text-red-700 mb-4">
-            Confirm Bulk Bill Generation
+            Generate Monthly Bills
           </h2>
-          <p className="text-gray-700 text-center">
-            Are you sure you want generate all bills at once? Bills will be calculated based on base rent.
-          </p>
-          <div className="flex justify-between mt-6">
-            <button
-              type="button"
-              onClick={() => setpopup(false)}
-              className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={() => handledelete(selectedId)}
-              className="px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 shadow-sm transition"
-            >
-              Confirm
-            </button>
+          
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+            <p className="text-amber-800 text-sm font-medium text-center">
+              ⚠️ Warning! Bills will be generated based on base rent and all bill status will become unpaid.
+            </p>
           </div>
+
+          <form onSubmit={(e) => { e.preventDefault(); handleGenerateMonthlyBills(); }} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Fiscal Period Start</label>
+              <input
+                type="date"
+                value={monthlyBillsForm.startperiod}
+                onChange={(e) => setMonthlyBillsForm({...monthlyBillsForm, startperiod: e.target.value})}
+                className="input-field w-full"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Fiscal Period End</label>
+              <input
+                type="date"
+                value={monthlyBillsForm.endperiod}
+                onChange={(e) => setMonthlyBillsForm({...monthlyBillsForm, endperiod: e.target.value})}
+                className="input-field w-full"
+                required
+              />
+            </div>
+
+            {monthlyBillsError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-red-600 text-sm">{monthlyBillsError}</p>
+              </div>
+            )}
+
+            {monthlyBillsSuccess && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-green-600 text-sm">{monthlyBillsSuccess}</p>
+              </div>
+            )}
+
+            <div className="flex justify-between mt-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setpopup(false);
+                  setMonthlyBillsForm({ startperiod: '', endperiod: '' });
+                  setMonthlyBillsError('');
+                  setMonthlyBillsSuccess('');
+                }}
+                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+                disabled={monthlyBillsLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 shadow-sm transition disabled:opacity-50"
+                disabled={monthlyBillsLoading}
+              >
+                {monthlyBillsLoading ? 'Generating...' : 'Generate Bills'}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     )}
