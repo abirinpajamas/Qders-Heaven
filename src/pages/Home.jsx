@@ -9,6 +9,8 @@ const Home = () => {
   const [tenantdata,settenantdata]=useState([])
   const [homevalues,sethomevalues]=useState([])
 
+
+  
   const stats = [
     {
       title: 'Total Properties',

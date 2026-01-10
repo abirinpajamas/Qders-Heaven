@@ -12,14 +12,22 @@ const AdminPortal = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [checkingAuth, setCheckingAuth] = useState(true)
   const navigate = useNavigate()
 
   useEffect(() => {
-    // Check if admin is already logged in
-    const token = localStorage.getItem('admin_token')
-    if (token) {
-      navigate('/admin-dashboard')
-    }
+    // Check if admin is already logged in via session
+    fetch('http://localhost/qadersheavennew/php/checkSession.php', { 
+      credentials: 'include' 
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.loggedIn) {
+          navigate('/', { replace: true })
+        }
+      })
+      .catch(err => console.error('Auth check failed:', err))
+      .finally(() => setCheckingAuth(false))
   }, [navigate])
 
   const handleSubmit = async (e) => {
@@ -37,22 +45,41 @@ const AdminPortal = () => {
             password: formData.password,
             role: formData.role
           }
-    console.log("payload:",payload)
-      const response = await axios.post(`http://localhost/qadersheavennew/php/${endpoint}.php`, payload)
+    
+      console.log("payload:", payload)
       
-      console.log("res:",response.data)
+      // IMPORTANT: Add credentials: 'include' to send/receive cookies
+      const response = await axios.post(
+        `http://localhost/qadersheavennew/php/${endpoint}.php`, 
+        payload,
+        { withCredentials: true } // This enables session cookies
+      )
+      
+      console.log("res:", response.data)
+      
       if (response.data && response.data.success) {
-        localStorage.setItem('admin_token', response.data.token)
-        localStorage.setItem('admin_data', JSON.stringify(response.data.admin))
-        navigate('/admin-dashboard')
+        // Don't use localStorage anymore - session is handled by PHP
+        navigate('/', { replace: true })
       } else {
         setError(response.data.message || 'Authentication failed')
       }
     } catch (err) {
-      setError('Network error. Please try again.')
+      console.error('Login error:', err)
+      setError(err.response?.data?.message || 'Network error. Please try again.')
     } finally {
       setLoading(false)
     }
+  }
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -81,7 +108,7 @@ const AdminPortal = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-5 w-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="email"
                   required
@@ -97,7 +124,7 @@ const AdminPortal = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-5 w-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type={showPassword ? "text" : "password"}
                   required
@@ -126,7 +153,7 @@ const AdminPortal = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 h-5 w-5 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <input
                       type="text"
                       required
@@ -141,7 +168,7 @@ const AdminPortal = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
                   <div className="relative">
-                    <Shield className="absolute left-3 top-1/2 h-5 w-5 text-gray-400" />
+                    <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <select
                       required
                       value={formData.role || ''}
@@ -170,13 +197,13 @@ const AdminPortal = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? (
                   <div className="flex items-center">
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018 8 018"></path>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     Processing...
                   </div>
@@ -192,7 +219,7 @@ const AdminPortal = () => {
             {/* Toggle Login/Signup */}
             <div className="text-center">
               <p className="text-sm text-gray-600">
-                {isLogin ? "Don't have an account?" : "Already have an account?"}
+                {isLogin ? "Don't have an account? " : "Already have an account? "}
                 <button
                   type="button"
                   onClick={() => {
@@ -200,7 +227,7 @@ const AdminPortal = () => {
                     setError('')
                     setFormData({ email: '', password: '' })
                   }}
-                  className="font-medium text-gray-600 hover:text-gray-500 focus:outline-none"
+                  className="font-medium text-gray-600 hover:text-gray-500 focus:outline-none underline"
                 >
                   {isLogin ? 'Sign up' : 'Sign in'}
                 </button>
@@ -215,7 +242,7 @@ const AdminPortal = () => {
             Are you a tenant?{' '}
             <Link 
               to="/signin" 
-              className="font-medium text-blue-600 hover:text-blue-500 focus:outline-none"
+              className="font-medium text-blue-600 hover:text-blue-500 focus:outline-none underline"
             >
               Access Tenant Portal
             </Link>

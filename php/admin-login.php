@@ -1,10 +1,26 @@
 <?php
+session_start();
+
 include("database.php");
 
-header("Access-Control-Allow-Origin: *");
+$origin = $_SERVER['HTTP_ORIGIN'] ?? "*";
+$allowed_origins = [
+    "http://localhost:5173", 
+    "http://localhost:3000",
+    "https://www.qadersheaven.com"
+];
+
+if(in_array($origin, $allowed_origins)){
+    header("Access-Control-Allow-Origin: " . $origin); 
+}
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
+header("Access-Control-Allow-Credentials: true");
+
+
+
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -45,11 +61,15 @@ try {
             
             if (password_verify($password, $admin['password_hash'])) {
                 // Generate simple token (in production, use JWT)
-                $token = base64_encode($admin['user_id'] . ':' . time());
+                 
+
+                $_SESSION['admin_id'] = $admin['user_id'];
+                $_SESSION['admin_name'] = $admin['fname'];
+                $_SESSION['admin_email'] = $admin['email'];
+                $_SESSION['admin_role'] = $admin['user_type'];
                 
                 $response["success"] = true;
                 $response["message"] = "Login successful";
-                $response["token"] = $token;
                 $response["admin"] = [
                     "admin_id" => $admin['user_id'],
                     "name" => $admin['fname'],

@@ -28,11 +28,12 @@ if (!$conn) {
     $user_type = $data->user_type;
     $password = $data->password;
  
+    $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
     $sql = "insert into users (fname, lname, email, username, user_type, password_hash) 
        values (?,?,?,?,?,?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssss", $fname, $lname, $email, $username, $user_type, $password);
+    $stmt->bind_param("ssssss", $fname, $lname, $email, $username, $user_type, $password_hash);
 
     if ($stmt->execute()) {
         $response=["success" => true, "message" => "Input successful"];

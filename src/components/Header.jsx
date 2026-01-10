@@ -1,8 +1,10 @@
 import { Menu, LogOut, User } from 'lucide-react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 const Header = ({ toggleSidebar }) => {
   const location = useLocation()
+  const navigate=useNavigate();
   
   const getPageTitle = () => {
     const path = location.pathname
@@ -28,6 +30,25 @@ const Header = ({ toggleSidebar }) => {
     return titles[path] || 'Dashboard'
   }
 
+
+ const handleLogout =async () => {
+    try{
+     const res=await fetch('http://localhost/qadersheavennew/php/logout.php',
+     {method: 'GET',
+     credentials: 'include'
+     })
+
+     const data=await res.json()
+     console.log(data)
+     if(data.success){
+      console.log('logout successful')
+      navigate('/admin-signin')
+     }
+    }catch(error){
+      console.log(error)
+    }
+    navigate('/admin-signin')
+  }
   return (
     <header className="h-16 bg-white shadow-md flex items-center justify-between px-6 sticky top-0 z-10">
       {/* Left Section */}
@@ -47,7 +68,8 @@ const Header = ({ toggleSidebar }) => {
           <User className="w-5 h-5 text-gray-600" />
           <span className="text-sm font-medium text-gray-700">Bismillahir Rahman</span>
         </div>
-        <button className="flex items-center space-x-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">
+        <button className="flex items-center space-x-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                onClick={handleLogout}>
           <LogOut className="w-5 h-5" />
           <span className="text-sm font-medium">Logout</span>
         </button>
