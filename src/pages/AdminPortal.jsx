@@ -59,7 +59,8 @@ const AdminPortal = () => {
       
       if (response.data && response.data.success) {
         // Don't use localStorage anymore - session is handled by PHP
-        navigate('/', { replace: true })
+        // Force a page reload to ensure App.jsx re-checks the session
+        window.location.href = '/'
       } else {
         setError(response.data.message || 'Authentication failed')
       }
@@ -216,7 +217,7 @@ const AdminPortal = () => {
               </button>
             </div>
 
-            {/* Toggle Login/Signup */}
+            {/* 
             <div className="text-center">
               <p className="text-sm text-gray-600">
                 {isLogin ? "Don't have an account? " : "Already have an account? "}
@@ -233,6 +234,7 @@ const AdminPortal = () => {
                 </button>
               </p>
             </div>
+            */}
           </form>
         </div>
 

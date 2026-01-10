@@ -29,24 +29,19 @@ const TenantLogin = () => {
 
     try {
       const endpoint = isLogin ? 'tenant-login' : 'tenant-signup'
-      const payload = isLogin 
-        ? { email: formData.email, password: formData.password }
-        : { 
-            name: formData.name,
-            email: formData.email, 
-            phone: formData.phone,
-            password: formData.password,
-            unit_id: formData.unit_id
-          }
+      const payload ={ email: formData.email, password: formData.password }
+        
 
-      const response = await axios.post(`http://localhost/qadersheavennew/php/${endpoint}.php`, payload)
+      const response = await axios.post(`http://localhost/qadersheavennew/php/tenant-login.php`, payload, { withCredentials: true })
       
       if (response.data && response.data.success) {
-        localStorage.setItem('tenant_token', response.data.token)
-        localStorage.setItem('tenant_data', JSON.stringify(response.data.tenant))
-        navigate('/tenant-dashboard')
+        console.log("response tenant",response.data)
+        localStorage.setItem('tenantdata', response.data.tenant)
+        // Force a page reload to ensure proper session handling
+        window.location.href = '/tenant-portal'
       } else {
         setError(response.data.message || 'Authentication failed')
+        console.log(response.data)
       }
     } catch (err) {
       setError('Network error. Please try again.')
@@ -200,7 +195,7 @@ const TenantLogin = () => {
               </button>
             </div>
 
-            {/* Toggle Login/Signup */}
+            {/*
             <div className="text-center">
               <p className="text-sm text-gray-600">
                 {isLogin ? "Don't have an account?" : "Already have an account?"}
@@ -217,6 +212,7 @@ const TenantLogin = () => {
                 </button>
               </p>
             </div>
+            */}
           </form>
         </div>
 

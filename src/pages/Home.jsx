@@ -1,4 +1,4 @@
-import { Building2, Users, DollarSign, FileText, TrendingUp, TrendingDown } from 'lucide-react'
+import { Building2, Users, DollarSign, FileText, TrendingUp, TrendingDown, UserPlus, CreditCard, Receipt } from 'lucide-react'
 import { useState,useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'; // Add this line
 
@@ -8,6 +8,8 @@ const Home = () => {
   const [propertydata,setpropertydata]=useState([])
   const [tenantdata,settenantdata]=useState([])
   const [homevalues,sethomevalues]=useState([])
+  const [recentActivities, setRecentActivities] = useState([])
+  const [activitiesLoading, setActivitiesLoading] = useState(true)
 
 
   
@@ -46,18 +48,57 @@ const Home = () => {
     }
   ]
 
-  const recentActivities = [
-    { id: 1, action: 'New tenant registered', property: 'Rangs Qaders Heaven', time: '2 hours ago' },
-    { id: 2, action: 'Payment received', property: 'Unit 3, Floor 2', time: '4 hours ago' },
-    { id: 3, action: 'Meter reading updated', property: 'Meter #12345789', time: '6 hours ago' },
-    { id: 4, action: 'Maintenance request', property: 'Unit 5, Floor 1', time: '1 day ago' },
-  ]
+  // Fetch recent activities
+  useEffect(() => {
+    const fetchRecentActivities = async () => {
+      try {
+        const response = await fetch('http://localhost/qadersheavennew/php/getRecentActivities.php', {
+          method: 'GET',
+          credentials: 'include'
+        })
+        const data = await response.json()
+        if (data.success) {
+          setRecentActivities(data.activities)
+        }
+      } catch (error) {
+        console.error('Error fetching recent activities:', error)
+      } finally {
+        setActivitiesLoading(false)
+      }
+    }
+
+    fetchRecentActivities()
+  }, [])
+
+  // Get icon for activity type
+  const getActivityIcon = (type) => {
+    switch(type) {
+      case 'tenant_registered': return UserPlus
+      case 'payment_received': return CreditCard
+      case 'bill_generated': return Receipt
+      default: return FileText
+    }
+  }
+
+  // Get color for activity type
+  const getActivityColor = (type) => {
+    switch(type) {
+      case 'tenant_registered': return 'bg-green-100 text-green-700'
+      case 'payment_received': return 'bg-blue-100 text-blue-700'
+      case 'bill_generated': return 'bg-orange-100 text-orange-700'
+      default: return 'bg-gray-100 text-gray-700'
+    }
+  }
 
 useEffect(()=>{
-      fetch('http://localhost/qadersheavennew/php/getHomevalues.php')
+      fetch('http://localhost/qadersheavennew/php/getHomevalues.php',{
+        method: 'GET',
+        credentials: 'include'
+      })
       .then((res)=>res.json())
       .then((data)=>{
-        sethomevalues(data)
+        sethomevalues(data.res)
+        localStorage.setItem('name',data.name)
         console.log(data)
 
       })
@@ -76,7 +117,7 @@ useEffect(()=>{
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="card">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome to Qaders Heaven</h1>
+       {/* <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome to Qaders Heaven</h1>*/}
         <p className="text-gray-600">Property Management Dashboard</p>
       </div>
 
@@ -114,17 +155,33 @@ useEffect(()=>{
       {/* Recent Activities */}
       <div className="card">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Recent Activities</h2>
-        <div className="space-y-4">
-          {recentActivities.map((activity) => (
-            <div key={activity.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div>
-                <p className="font-medium text-gray-800">{activity.action}</p>
-                <p className="text-sm text-gray-600">{activity.property}</p>
-              </div>
-              <span className="text-sm text-gray-500">{activity.time}</span>
-            </div>
-          ))}
-        </div>
+        {activitiesLoading ? (
+          <div className="text-center py-8 text-gray-500">Loading recent activities...</div>
+        ) : recentActivities.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">No recent activities found</div>
+        ) : (
+          <div className="space-y-3">
+            {recentActivities.map((activity, index) => {
+              const Icon = getActivityIcon(activity.type)
+              const colorClass = getActivityColor(activity.type)
+              return (
+                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-2 rounded-lg ${colorClass}`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">{activity.action}</p>
+                      <p className="text-sm text-gray-600">{activity.details}</p>
+                      <p className="text-xs text-gray-500">{activity.property}</p>
+                    </div>
+                  </div>
+                  <span className="text-sm text-gray-500 whitespace-nowrap">{activity.time}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Quick Actions */}

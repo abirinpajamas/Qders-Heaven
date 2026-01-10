@@ -19,7 +19,7 @@ const PaymentDetails = () => {
         const res = await axios.post('http://localhost/qadersheavennew/php/getpayments.php', {
           start_date: startDate,
           end_date: endDate
-        });
+        }, { withCredentials: true });
         console.log("Payment data:", res.data);
         if (res.data && res.data.success) {
           setPayments(res.data.payments || []);
@@ -40,6 +40,25 @@ const PaymentDetails = () => {
   const pending = payments.filter(p => p.bill_status === 'partially paid' || p.bill_status === 'unpaid');
   const failed = payments.filter(p => p.bill_status === 'failed');
   const completed = payments.filter(p => p.bill_status === 'paid');
+
+
+  const calculateDays = (start, end) => {
+  if (!start || !end) return 0;
+  
+  const startDateObj = new Date(start);
+  const endDateObj = new Date(end);
+  
+  // Difference in milliseconds
+  const diffInMs = endDateObj - startDateObj;
+  
+  // Convert ms to days
+  const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+  
+  return Math.round(diffInDays);
+};
+
+// Use it like this:
+const duration = calculateDays(startDate, endDate);
 
   return (
     <div className="space-y-6">
@@ -63,7 +82,7 @@ const PaymentDetails = () => {
             <CheckCircle className="w-5 h-5 text-green-600" />
           </div>
           <h3 className="text-2xl font-bold text-gray-800">৳{totalCollected}</h3>
-          <p className="text-sm text-green-600 mt-2">This month</p>
+          <p className="text-sm text-green-600 mt-2">In {duration >= 0 ? `${duration} days` : "Invalid Range"}</p>
         </div>
 
         <div className="card">

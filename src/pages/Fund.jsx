@@ -22,7 +22,7 @@ useEffect(() => {
       const res = await axios.post('http://localhost/qadersheavennew/php/getfunds.php', {
         start_date: startDate,
         end_date: endDate
-      });
+      }, { withCredentials: true });
       if (res.data && res.data.success) {
         console.log(res.data);
         setTotals({
@@ -40,6 +40,25 @@ useEffect(() => {
   };
   fetchFunds();
 }, [startDate, endDate]);
+
+
+const calculateDays = (start, end) => {
+  if (!start || !end) return 0;
+  
+  const startDateObj = new Date(start);
+  const endDateObj = new Date(end);
+  
+  // Difference in milliseconds
+  const diffInMs = endDateObj - startDateObj;
+  
+  // Convert ms to days
+  const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+  
+  return Math.round(diffInDays);
+};
+
+// Use it like this:
+const duration = calculateDays(startDate, endDate);
 
   return (
     <div className="space-y-6">
@@ -63,6 +82,8 @@ useEffect(() => {
             <ArrowUpRight className="w-5 h-5" />
           </div>
           <h3 className="text-3xl font-bold">৳{totals.total_income.toLocaleString()}</h3>
+          <p className="text-sm text-white-600 mt-2">In {duration >= 0 ? `${duration} days` : "Invalid Range"}</p>
+
         </div>
 
         <div className="card bg-gradient-to-br from-red-500 to-red-600 text-white">
@@ -71,7 +92,7 @@ useEffect(() => {
             <ArrowDownRight className="w-5 h-5" />
           </div>
           <h3 className="text-3xl font-bold">৳{totals.total_expense.toLocaleString()}</h3>
-        </div>
+          </div>
 
         <div className="card bg-gradient-to-br from-blue-500 to-blue-600 text-white">
           <div className="flex items-center justify-between mb-2">

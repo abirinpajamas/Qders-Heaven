@@ -9,6 +9,7 @@ const AdminManagement = () => {
   const [selectedId, setselectedId] = useState(null)
   const [refresh, setrefresh] = useState(false)
   const [showAddAdmin, setShowAddAdmin] = useState(false)
+  const [role,setRole]=useState('')
   const [formData, setFormData] = useState({
     fname: '',
     lname: '',
@@ -24,11 +25,15 @@ const AdminManagement = () => {
 
 
   useEffect(() => {
-    fetch('http://localhost/qadersheavennew/php/getusers.php')
+    fetch('http://localhost/qadersheavennew/php/getusers.php',{
+      method: 'GET',
+      credentials: 'include'
+    })
     .then(res => res.json())
     .then(data => {
-      setUserdata(data)
-      console.log(data)
+      setUserdata(data.users)
+      setRole(data.role)
+      console.log('admin data',data)
     })
     
   }, [refresh])
@@ -39,7 +44,7 @@ const AdminManagement = () => {
     setpopup(false)
     console.log(`this is the id ${id}`)
     try{
-      const response = await axios.post('http://localhost/qadersheavennew/php/deleteuser.php', { id })
+      const response = await axios.post('http://localhost/qadersheavennew/php/deleteuser.php', { id }, { withCredentials: true })
       console.log(response.data)
       setrefresh(!refresh)
     } catch(err){
@@ -85,7 +90,7 @@ const AdminManagement = () => {
         username: formData.username,
         user_type: formData.user_type,
         password: formData.password
-      })
+      }, { withCredentials: true })
       console.log('response', response.data)
       
       if (response.data.success) {
@@ -101,7 +106,10 @@ const AdminManagement = () => {
           confirmPassword: ''
         })
         setrefresh(!refresh)
+      }else{
+        alert(response.data.message)
       }
+
     } catch (error) {
       console.error('Error adding admin:', error)
     }
@@ -110,7 +118,7 @@ const AdminManagement = () => {
   return (
     <div className="relative min-h-screen">
       {/* Add Admin Modal */}
-      {showAddAdmin && (
+      {showAddAdmin  && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="p-6">
@@ -286,6 +294,8 @@ const AdminManagement = () => {
             <h1 className="text-2xl font-bold text-gray-800">Admin Management</h1>
             <p className="text-gray-600 mt-1">Manage system administrators</p>
           </div>
+
+          {role === 'super admin' && (
           <button 
             onClick={() => setShowAddAdmin(true)}
             className="btn-primary flex items-center space-x-2"
@@ -293,6 +303,7 @@ const AdminManagement = () => {
             <UserPlus className="w-5 h-5" />
             <span>Add Admin</span>
           </button>
+          )}
         </div>
 
         
@@ -325,9 +336,11 @@ const AdminManagement = () => {
                 <button className="flex-1 btn-icon bg-blue-100 hover:bg-blue-200 text-blue-700">
                   <Edit className="w-4 h-4" />
                 </button>
+                { role === 'super admin' && (
                 <button className="flex-1 btn-icon bg-red-100 hover:bg-red-200 text-red-700" onClick={() => { setpopup(true); setselectedId(admin.user_id); }}>
                   <Trash2 className="w-4 h-4" />
                 </button>
+                )}
               </div>
             </div>
           ))}

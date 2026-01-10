@@ -70,7 +70,7 @@ const UnitEntry = () => {
       baseRent,
       type,
       status
-    })
+    }, { withCredentials: true })
     console.log(response.data.success)
     console.log(response.data)
     setstate(!state)
@@ -83,7 +83,7 @@ const UnitEntry = () => {
   const handledelete=async(id)=>{
     setpopup(false)
     try{
-      const response=await axios.post('http://localhost/qadersheavennew/php/deleteunit.php', { id })
+      const response=await axios.post('http://localhost/qadersheavennew/php/deleteunit.php', { id }, { withCredentials: true })
       console.log(response.data)
       setstate(!state)
     }catch(err){

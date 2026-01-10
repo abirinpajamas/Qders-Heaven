@@ -1,10 +1,20 @@
 <?php
 include("database.php");
 
-header("Access-Control-Allow-Origin: *");
+$origin = $_SERVER['HTTP_ORIGIN'] ?? "*";
+$allowed_origins = [
+    "http://localhost:5173", 
+    "http://localhost:3000",
+    "https://www.qadersheaven.com"
+];
+
+if(in_array($origin, $allowed_origins)){
+    header("Access-Control-Allow-Origin: " . $origin); 
+}
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
+header("Access-Control-Allow-Credentials: true");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -30,15 +40,14 @@ $response = ["success" => false, "message" => ""];
 
 try {
     // Check if it's login or signup based on presence of name field
-    $isLogin = !isset($data->name);
     
-    if ($isLogin) {
         // Login logic
-        $sql = "SELECT t.*, u.unit_number, p.name AS property_name 
-                FROM tenants t 
-                LEFT JOIN units u ON t.unit_id = u.unit_id 
-                LEFT JOIN properties p ON u.property_id = p.property_id 
-                WHERE t.email = ? AND t.status = 'Current'";
+        $sql = "SELECT t.*, u.unit_number,u.unit_id, p.name as property_name,p.property_id
+                FROM tenant_accounts t
+                inner JOIN tenants te ON t.tenant_id = te.tenant_id
+                inner JOIN units u ON te.unit_id = u.unit_id
+                inner JOIN properties p ON u.property_id = p.property_id
+                WHERE t.email = ? ";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $email);
         $stmt->execute();
@@ -51,6 +60,11 @@ try {
                 // Generate simple token (in production, use JWT)
                 $token = base64_encode($tenant['tenant_id'] . ':' . time());
                 
+                // Set session variables
+                $_SESSION['tenant_id'] = $tenant['tenant_id'];
+                $_SESSION['tenant_name'] = $tenant['name'];
+                $_SESSION['tenant_email'] = $tenant['email'];
+                
                 $response["success"] = true;
                 $response["message"] = "Login successful";
                 $response["token"] = $token;
@@ -58,6 +72,8 @@ try {
                     "tenant_id" => $tenant['tenant_id'],
                     "name" => $tenant['name'],
                     "email" => $tenant['email'],
+                    "unit_id" => $tenant['unit_id'],
+                    "property_id" => $tenant['property_id'],
                     "unit_number" => $tenant['unit_number'],
                     "property_name" => $tenant['property_name']
                 ];
@@ -69,59 +85,7 @@ try {
         }
         $stmt->close();
         
-    } else {
-        // Signup logic
-        $name = $data->name ?? '';
-        $phone = $data->phone ?? '';
-        $unit_id = $data->unit_id ?? '';
-        
-        if (empty($name) || empty($phone) || empty($unit_id)) {
-            echo json_encode(["success" => false, "message" => "Name, phone, and unit ID are required"]);
-            exit();
-        }
-        
-        // Check if email already exists
-        $check_sql = "SELECT tenant_id FROM tenants WHERE email = ?";
-        $check_stmt = $conn->prepare($check_sql);
-        $check_stmt->bind_param("s", $email);
-        $check_stmt->execute();
-        $check_result = $check_stmt->get_result();
-        
-        if ($check_result->num_rows > 0) {
-            $response["message"] = "Email already exists";
-        } else {
-            // Hash password
-            $password_hash = password_hash($password, PASSWORD_DEFAULT);
-            
-            // Insert new tenant
-            $insert_sql = "INSERT INTO tenants (name, email, phone, password_hash, unit_id, status, created_at) 
-                           VALUES (?, ?, ?, ?, ?, 'Current', NOW())";
-            $insert_stmt = $conn->prepare($insert_sql);
-            $insert_stmt->bind_param("sssis", $name, $email, $phone, $password_hash, $unit_id);
-            
-            if ($insert_stmt->execute()) {
-                $tenant_id = $conn->insert_id;
-                
-                // Generate token
-                $token = base64_encode($tenant_id . ':' . time());
-                
-                $response["success"] = true;
-                $response["message"] = "Registration successful";
-                $response["token"] = $token;
-                $response["tenant"] = [
-                    "tenant_id" => $tenant_id,
-                    "name" => $name,
-                    "email" => $email,
-                    "phone" => $phone,
-                    "unit_id" => $unit_id
-                ];
-            } else {
-                $response["message"] = "Registration failed";
-            }
-            $insert_stmt->close();
-        }
-        $check_stmt->close();
-    }
+    
     
 } catch (Exception $e) {
     $response["message"] = "Error: " . $e->getMessage();

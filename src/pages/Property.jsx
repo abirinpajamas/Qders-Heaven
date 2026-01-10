@@ -61,7 +61,7 @@ const Property = () => {
       total_units,
       description,
       status
-    })
+    }, { withCredentials: true })
     console.log(response.data.success)
     console.log(response.data)
     setstate(!state)
@@ -74,7 +74,7 @@ const Property = () => {
   const handledelete = async (id) => {
     setpopup(false)
     try{
-      const response = await axios.post('http://localhost/qadersheavennew/php/deleteproperty.php', { id })
+      const response = await axios.post('http://localhost/qadersheavennew/php/deleteproperty.php', { id }, { withCredentials: true })
       console.log(response.data)
       setstate(!state)
     } catch(err){

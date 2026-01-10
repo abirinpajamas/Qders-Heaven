@@ -69,7 +69,7 @@ const TenantsBillGenerate = () => {
       status,
       meterid,
       note
-    })
+    }, { withCredentials: true })
     console.log(response.data.success)
     console.log(response.data)
     await generatePdf()
@@ -89,7 +89,7 @@ const handleGenerateMonthlyBills = async () => {
     const response = await axios.post('http://localhost/qadersheavennew/php/generatemonthlybills.php', {
       startperiod: monthlyBillsForm.startperiod,
       endperiod: monthlyBillsForm.endperiod
-    });
+    }, { withCredentials: true });
     console.log('res:',response.data)
     if (response.data.success) {
       setMonthlyBillsSuccess(response.data.message);

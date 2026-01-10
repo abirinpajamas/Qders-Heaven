@@ -1,10 +1,19 @@
 <?php
 include ("database.php");
 
-header("Access-Control-Allow-Origin: *");
+$origin = $_SERVER['HTTP_ORIGIN'] ?? "*";
+$allowed_origins = [
+    "http://localhost:5173", 
+    "http://localhost:3000",
+    "https://www.qadersheaven.com"
+];
+
+if(in_array($origin, $allowed_origins)){
+    header("Access-Control-Allow-Origin: " . $origin); 
+}
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
-header("Access-Control-Allow-Credentials: true"); // Allows cookies/sessions
+header("Access-Control-Allow-Credentials: true");
 header("Content-Type: application/json");
 
 // Handle OPTIONS preflight request
@@ -65,7 +74,8 @@ foreach ($queries as $key => $sql) {
 // 3. Return the final JSON response
 if ($success) {
     // Return all calculated counts/sums
-    echo json_encode($response_data);
+    $data=['name'=>$_SESSION['admin_name'],'res'=>$response_data];
+    echo json_encode($data);
 } else {
     // Return the database error
     http_response_code(500);

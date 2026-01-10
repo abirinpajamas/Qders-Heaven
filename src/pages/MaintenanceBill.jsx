@@ -86,7 +86,8 @@ const MaintenanceBill = () => {
     try {
       const response = await axios.post(
         'http://localhost/qadersheavennew/php/maintenancebill.php',
-        formData
+        formData,
+        { withCredentials: true }
       )
       if (response.data.success) {
         setRefresh(!refresh)
@@ -107,7 +108,7 @@ const MaintenanceBill = () => {
   const handleDeleteBill = async (bill_id) => {
     setDeletePopup(false)
     try {
-      const response = await axios.post('http://localhost/qadersheavennew/php/deletemaintenancebill.php', { id: bill_id })
+      const response = await axios.post('http://localhost/qadersheavennew/php/deletemaintenancebill.php', { id: bill_id }, { withCredentials: true })
       if (response.data && response.data.success) {
         setBills(prev => prev.filter(b => b.bill_id !== bill_id))
         setRefresh(r => !r)
@@ -365,7 +366,7 @@ const MaintenanceBill = () => {
                   payment_method: paymentForm.payment_method,
                   reference: paymentForm.reference,
                   note: paymentForm.note
-                });
+                }, { withCredentials: true });
                 if (res.data && res.data.success) {
                   setPaymentSuccess('Payment recorded successfully!');
                   setTimeout(() => {

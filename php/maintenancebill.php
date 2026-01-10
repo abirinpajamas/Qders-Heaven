@@ -1,10 +1,20 @@
 <?php
 include("database.php");
 
-header("Access-Control-Allow-Origin:*"); // More secure than *
+$origin = $_SERVER['HTTP_ORIGIN'] ?? "*";
+$allowed_origins = [
+    "http://localhost:5173", 
+    "http://localhost:3000",
+    "https://www.qadersheaven.com"
+];
+
+if(in_array($origin, $allowed_origins)){
+    header("Access-Control-Allow-Origin: " . $origin); 
+}
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Content-Type: application/json");
+header("Access-Control-Allow-Credentials: true");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     // If it's an OPTIONS request, return 200 OK and exit immediately

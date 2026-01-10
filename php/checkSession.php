@@ -23,21 +23,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// Check if session exists
-if (!isset($_SESSION['admin_id'])) {
-    // Return 200 with loggedIn: false instead of 401
+// Check if session exists (admin or tenant)
+if (isset($_SESSION['admin_id'])) {
+    // Admin session exists
+    http_response_code(200);
+    echo json_encode([
+        "loggedIn" => true,
+        "user_type" => "admin",
+        "user_id" => $_SESSION['admin_id'],
+        "name" => $_SESSION['admin_name'],
+        "email" => $_SESSION['admin_email'],
+        "role" => $_SESSION['admin_role']
+    ]);
+} elseif (isset($_SESSION['tenant_id'])) {
+    // Tenant session exists
+    http_response_code(200);
+    echo json_encode([
+        "loggedIn" => true,
+        "user_type" => "tenant",
+        "user_id" => $_SESSION['tenant_id'],
+        "name" => $_SESSION['tenant_name'],
+        "email" => $_SESSION['tenant_email']
+    ]);
+} else {
+    // No session exists
     http_response_code(200);
     echo json_encode(["loggedIn" => false]);
-    exit();
 }
-
-// Session exists, return user data
-http_response_code(200);
-echo json_encode([
-    "loggedIn" => true,
-    "user_id" => $_SESSION['admin_id'],
-    "name" => $_SESSION['admin_name'],
-    "email" => $_SESSION['admin_email'],
-    "role" => $_SESSION['admin_role']
-]);
 ?>

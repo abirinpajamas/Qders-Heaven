@@ -26,6 +26,7 @@ import ProtectedRoutes from './pages/ProtectedRoutes'
 
 function App() {
  const[loggedIn,setloggedIn]=useState(false)
+ const [userType, setUserType] = useState(null); // 'admin' or 'tenant'
  const [isLoading, setIsLoading] = useState(true);
 
 
@@ -44,8 +45,10 @@ function App() {
       .then(data => {
         if (data.loggedIn) {
           setloggedIn(true);
+          setUserType(data.user_type); // 'admin' or 'tenant'
         } else {
           setloggedIn(false);
+          setUserType(null);
         }
       })
       .catch(err => {
@@ -64,13 +67,14 @@ function App() {
       <Routes>
         <Route path="/signin" element={<TenantLogin />} />
         <Route path="/admin-signin" element={<AdminPortal />} />
+        
+        {/* Admin Routes - Protected */}
         <Route path="/" element={
-          <ProtectedRoutes isLoggedIn={loggedIn} isLoading={isLoading}>
+          <ProtectedRoutes isLoggedIn={loggedIn} isLoading={isLoading} requiredUserType="admin" userType={userType}>
             <Layout />
           </ProtectedRoutes>
         }>
           <Route index element={<Home />} />
-          <Route path="tenant-portal" element={<TenantPortal />} />
           <Route path="admin-management" element={<AdminManagement />} />
           <Route path="report" element={<Report />} />
           <Route path="fund" element={<Fund />} />
@@ -89,6 +93,13 @@ function App() {
           <Route path="settings" element={<Settings />} />
           <Route path="basic-settings" element={<BasicSettings />} />
         </Route>
+        
+        {/* Tenant Routes - Standalone */}
+        <Route path="/tenant-portal" element={
+          <ProtectedRoutes isLoggedIn={loggedIn} isLoading={isLoading} requiredUserType="tenant" userType={userType}>
+            <TenantPortal />
+          </ProtectedRoutes>
+        } />
         
       </Routes>
     </Router>

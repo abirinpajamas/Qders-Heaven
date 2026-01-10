@@ -1,17 +1,21 @@
 <?php
 // logout.php
-$origin = $_SERVER['HTTP_ORIGIN']??"*";
-$allowed_origins = ["http://localhost:5173", 
-                   "http://localhost:3000","https://www.qadersheaven.com"]; // Add your React app URL
+include("database.php");
 
+$origin = $_SERVER['HTTP_ORIGIN'] ?? "*";
+$allowed_origins = [
+    "http://localhost:5173", 
+    "http://localhost:3000",
+    "https://www.qadersheaven.com"
+];
 
 if(in_array($origin, $allowed_origins)){
-header("Access-Control-Allow-Origin:".$origin); 
-}// Your React URL
-header("Access-Control-Allow-Credentials: true");
+    header("Access-Control-Allow-Origin: " . $origin); 
+}
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
-
-session_start();
+header("Access-Control-Allow-Credentials: true");
 
 // 1. Unset all session variables
 $_SESSION = array();
@@ -28,5 +32,5 @@ if (ini_get("session.use_cookies")) {
 // 3. Destroy the session on the server
 session_destroy();
 
-echo json_encode(["success" => true, "message" => "Logged out successfully"]);
+echo json_encode(["success" => true, "message" => "Logged out successfully", "redirect" => "/admin-signin"]);
 ?>

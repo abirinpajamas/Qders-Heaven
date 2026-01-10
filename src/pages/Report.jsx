@@ -36,16 +36,17 @@ const Report = () => {
     setLoading(true)
     try {
       const [repRes, unitsRes, tenantsRes] = await Promise.all([
-        axios.post('http://localhost/qadersheavennew/php/getreports.php', { start, end }),
-        fetch('http://localhost/qadersheavennew/php/getunits.php').then(r => r.json()),
-        fetch('http://localhost/qadersheavennew/php/gettenants.php').then(r => r.json())
+        axios.post('http://localhost/qadersheavennew/php/getreports.php', { start, end }, { withCredentials: true }),
+        fetch('http://localhost/qadersheavennew/php/getunits.php', { withCredentials: true }).then(r => r.json()),
+        fetch('http://localhost/qadersheavennew/php/gettenants.php', { withCredentials: true }).then(r => r.json())
       ])
       const rows = repRes.data?.data || []
       setBills(rows)
       setUnits(unitsRes || [])
-      setTenants(tenantsRes || [])
-      console.log('Report Data:', tenantsRes)
-      computeSummary(rows, unitsRes || [], tenantsRes || [])
+      console.log('tenants:',tenantsRes)
+      setTenants(tenantsRes.tenants || [])
+      console.log('Report Data:', tenantsRes.tenants)
+      computeSummary(rows, unitsRes || [], tenantsRes.tenants || [])
     } catch (e) {
       console.error(e)
     } finally {

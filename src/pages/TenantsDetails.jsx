@@ -1,4 +1,4 @@
-import { Plus, User, Phone, Mail, MapPin, Edit, Trash2, Eye } from 'lucide-react'
+import { UserCheck,Plus, User, Phone, Mail, MapPin, Edit, Trash2, Eye, UserPlus } from 'lucide-react'
 import { useState,useEffect } from 'react'
 import axios from 'axios'
 
@@ -39,16 +39,34 @@ const TenantsDetails = () => {
   const [tempValue,setTempValue]=useState("");
   const [showinput,setshowinput]=useState(false);
   const[baseRent,setBaseRent]=useState(0);
+  const[role,setRole]=useState('');
+  const [tenantaccounts,settenantaccounts]=useState([]);
+  // Portal account creation states
+  const [showPortalModal, setShowPortalModal] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState(null);
+  const [portalForm, setPortalForm] = useState({
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalError, setPortalError] = useState('');
+  const [portalSuccess, setPortalSuccess] = useState('');
 
 
 
   
   useEffect(()=>{
-    fetch('http://localhost/qadersheavennew/php/gettenants.php')
+    fetch('http://localhost/qadersheavennew/php/gettenants.php',{
+      method: 'GET',
+      credentials: 'include'
+    })
     .then((res)=>res.json())
     .then((data)=>{
-      settenantdata(data)
-      console.log(data)    
+      settenantdata(data.tenants)
+      setRole(data.role)
+      settenantaccounts(data.tenantsaccounts)
+      console.log('tenant data',data)    
  
     })
      .catch((error)=>{
@@ -120,7 +138,7 @@ const TenantsDetails = () => {
       startDate,
       endDate,
       notes,
-      })
+      }, { withCredentials: true })
       console.log(response.data.success)
       console.log(response.data)
       setrefresh(!refresh)
@@ -132,7 +150,7 @@ const TenantsDetails = () => {
   const handledelete = async (id) => {
     setpopup(false)
     try{
-      const response = await axios.post('http://localhost/qadersheavennew/php/deletetenant.php', { id })
+      const response = await axios.post('http://localhost/qadersheavennew/php/deletetenant.php', { id }, { withCredentials: true })
       console.log(response.data)
       settenantdata((prev) => prev.filter(t => t.tenant_id !== id))
     } catch(err){
@@ -146,7 +164,7 @@ const TenantsDetails = () => {
         unit_id: editing.id,
         field: editing.field,
         value: editing.field === 'base_rent' ? baseRent : name
-      })
+      }, { withCredentials: true })
       console.log(response.data)
       setrefresh(!refresh)
       setEditing({id:null,field:null})
@@ -158,6 +176,70 @@ const TenantsDetails = () => {
       setBaseRent('')
       setName('')
     }
+  }
+  
+  const handleCreatePortalAccount = async () => {
+    setPortalLoading(true);
+    setPortalError('');
+    setPortalSuccess('');
+
+    // Validate form
+    if (!portalForm.email || !portalForm.password || !portalForm.confirmPassword) {
+      setPortalError('All fields are required');
+      setPortalLoading(false);
+      return;
+    }
+
+    if (portalForm.password !== portalForm.confirmPassword) {
+      setPortalError('Passwords do not match');
+      setPortalLoading(false);
+      return;
+    }
+
+    if (portalForm.password.length < 6) {
+      setPortalError('Password must be at least 6 characters long');
+      setPortalLoading(false);
+      return;
+    }
+    console.log(selectedTenant)
+    try {
+      const response = await axios.post('http://localhost/qadersheavennew/php/createtenantportal.php', {
+        tenant_id: selectedTenant.tenant_id,
+        tenant_name: selectedTenant.name,
+        email: portalForm.email,
+        password: portalForm.password
+      }, { withCredentials: true });
+
+      if (response.data.success) {
+        setPortalSuccess('Portal account created successfully!');
+        setrefresh(!refresh)
+        setTimeout(() => {
+          setShowPortalModal(false);
+          setPortalForm({ email: '', password: '', confirmPassword: '' });
+          setPortalSuccess('');
+        }, 1000);
+      } else {
+        setPortalError(response.data.message || 'Failed to create');
+        console.log(response.data)
+      }
+    } catch (error) {
+      console.error('Error creating portal account:', error);
+      setPortalError('Network error. Please try again.');
+    } finally {
+      setPortalLoading(false);
+    }
+  }
+
+  const openPortalModal = (tenant) => {
+    setSelectedTenant(tenant);
+    setPortalForm({
+      email: tenant.email || '', // Pre-fill with tenant's email if available
+      password: '',
+      confirmPassword: ''
+    });
+    setPortalError('');
+    setPortalSuccess('');
+    setShowPortalModal(true);
   }
   return (
     <>
@@ -265,13 +347,30 @@ const TenantsDetails = () => {
                 </div>
               </div>
               <div className="flex items-center space-x-2">
+                {/*
                 <button className="flex-1 btn-icon bg-green-100 hover:bg-green-200 text-green-700">
                   <Eye className="w-4 h-4" />
                 </button>
-                
-                <button className="flex-1 btn-icon bg-red-100 hover:bg-red-200 text-red-700" onClick={() => { setpopup(true); setselectedId(tenant.tenant_id); }}>
+                */}
+                {tenantaccounts.some(acc=>acc.tenant_id===tenant.tenant_id)?(
+                  <span className="flex-1 btn-icon bg-green-400">
+                    <UserCheck className="w-4 h-4" />
+                  </span>
+                ):(
+                <button 
+                  className="flex-1 btn-icon bg-blue-200 hover:bg-blue-400 text-blue-700" 
+                  onClick={() => openPortalModal(tenant)}
+                  title="Register Portal Account"
+                >
+                  <UserPlus className="w-4 h-4" />
+                </button>
+                )}
+                {role==='super admin' &&(
+                <button className="flex-1 btn-icon bg-red-100 hover:bg-red-300 text-red-700" onClick={() => { setpopup(true); setselectedId(tenant.tenant_id); }}>
                   <Trash2 className="w-4 h-4" />
                 </button>
+                )}
+                
               </div>
             </div>
           </div>
@@ -307,6 +406,118 @@ const TenantsDetails = () => {
     </div>
   </div>
 )}
+
+  {/* Portal Account Creation Modal */}
+  {showPortalModal && (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50 p-4">
+      <div className="bg-white w-full max-w-md mx-auto rounded-2xl shadow-2xl p-6 space-y-4 border border-blue-100">
+        <h2 className="text-xl font-semibold text-center text-blue-700 mb-4">
+          Create Portal Account
+        </h2>
+        
+        {selectedTenant && (
+          <div className="bg-gray-50 p-3 rounded-lg">
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Tenant:</span> {selectedTenant.name}
+            </p>
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Unit:</span> {selectedTenant.unit_number}
+            </p>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {portalError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p className="text-red-600 text-sm">{portalError}</p>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {portalSuccess && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+            <p className="text-green-600 text-sm">{portalSuccess}</p>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email Address
+            </label>
+            <input
+              type="email"
+              value={portalForm.email}
+              onChange={(e) => setPortalForm({...portalForm, email: e.target.value})}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              placeholder="Enter email for portal account"
+              required
+            />
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              value={portalForm.password}
+              onChange={(e) => setPortalForm({...portalForm, password: e.target.value})}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              placeholder="Enter password (min 6 characters)"
+              required
+            />
+          </div>
+
+          {/* Confirm Password */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              value={portalForm.confirmPassword}
+              onChange={(e) => setPortalForm({...portalForm, confirmPassword: e.target.value})}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              placeholder="Confirm password"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-between mt-6 space-x-3">
+          <button
+            type="button"
+            onClick={() => setShowPortalModal(false)}
+            className="flex-1 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+            disabled={portalLoading}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleCreatePortalAccount}
+            className="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={portalLoading}
+          >
+            {portalLoading ? (
+              <div className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Creating...
+              </div>
+            ) : (
+              'Create Account'
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
 
    
     {showForm && (

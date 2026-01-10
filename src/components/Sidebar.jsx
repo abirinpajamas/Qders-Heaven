@@ -35,7 +35,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   }
   const menuItems = [
     { path: '/', icon: Home, label: 'Home' },
-    { path: '/tenant-portal', icon: UserCheck, label: 'Tenant Portal' },
     { path: '/report', icon: FileText, label: 'Report' },
     { path: '/payment-details', icon: CreditCard, label: 'Payment Details' },
 

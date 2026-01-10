@@ -1,9 +1,24 @@
 <?php
+// Suppress warnings to prevent HTML in JSON response
+error_reporting(0);
+ini_set('display_errors', 0);
+
 include("database.php");
-header("Access-Control-Allow-Origin: *");
+
+$origin = $_SERVER['HTTP_ORIGIN'] ?? "*";
+$allowed_origins = [
+    "http://localhost:5173", 
+    "http://localhost:3000",
+    "https://www.qadersheaven.com"
+];
+
+if(in_array($origin, $allowed_origins)){
+    header("Access-Control-Allow-Origin: " . $origin); 
+}
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
+header("Access-Control-Allow-Credentials: true");
 if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
   http_response_code(200);
   exit();

@@ -38,7 +38,7 @@ const ServiceProviderContact = () => {
         address,
         contact,
         contact_phone,
-     })
+     }, { withCredentials: true })
      console.log(response.data.success)
      console.log(response.data)
      setresfresh(!resfresh)
@@ -66,7 +66,7 @@ const ServiceProviderContact = () => {
     try{
       const response=await axios.post('http://localhost/qadersheavennew/php/deleteservprovider.php', {
         id
-      })
+      }, { withCredentials: true })
       console.log(response.data.success)
       console.log(response.data)
       setresfresh(!resfresh)

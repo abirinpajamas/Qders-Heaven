@@ -69,7 +69,7 @@ const displayBills = bills.filter(bill => {
 
   const handleStatusChange = async (bill_id, status) => {
     try {
-      const res = await axios.post('http://localhost/qadersheavennew/php/updatebillstatus.php', { bill_id, status })
+      const res = await axios.post('http://localhost/qadersheavennew/php/updatebillstatus.php', { bill_id, status }, { withCredentials: true })
       if (res.data && res.data.success) {
         setBills(prev => prev.map(b => b.bill_id === bill_id ? { ...b, status, changes_date: new Date().toISOString().slice(0,10) } : b))
       }
@@ -81,7 +81,7 @@ const displayBills = bills.filter(bill => {
   const handleDeleteBill = async (bill_id) => {
     setDeletePopup(false)
     try {
-      const response = await axios.post('http://localhost/qadersheavennew/php/deletebill.php', { id: bill_id })
+      const response = await axios.post('http://localhost/qadersheavennew/php/deletebill.php', { id: bill_id }, { withCredentials: true })
       if (response.data && response.data.success) {
         setBills(prev => prev.filter(b => b.bill_id !== bill_id))
         setRefresh(r => !r)
@@ -158,7 +158,7 @@ const displayBills = bills.filter(bill => {
           <tbody>
             {displayBills.map((bill) => (
               <tr key={bill.bill_id} className="table-row">
-                <td className="px-6 py-4 text-sm font-medium text-gray-700">{`BILL-${bill.bill_id}`}</td>
+                <td className="px-6 py-4 text-sm font-medium text-gray-700">{`${bill.bill_id}`}</td>
                 <td className="px-6 py-4 text-sm text-gray-700">{bill.tenant_name || '-'}</td>
                 <td className="px-6 py-4 text-sm text-gray-700">{bill.unit_number}</td>
                 <td className="px-6 py-4 text-sm text-gray-700">{new Date(bill.period_start).toLocaleString('en-US', { month: 'long', year: 'numeric' })}</td>
@@ -230,7 +230,7 @@ const displayBills = bills.filter(bill => {
                     payment_method: paymentForm.payment_method,
                     reference: paymentForm.reference,
                     note: paymentForm.note
-                  });
+                  }, { withCredentials: true });
                   if (res.data && res.data.success) {
                     setPaymentSuccess('Payment recorded successfully!');
                     setTimeout(() => {
@@ -258,6 +258,7 @@ const displayBills = bills.filter(bill => {
                 <label className="block text-sm font-medium mb-1">Amount</label>
                 <input type="number" className="w-full border rounded px-3 py-2" required min="1"
                   value={paymentForm.amount}
+                  placeholder={paymentBill.amount-paymentBill.paid}
                   onChange={e => setPaymentForm(f => ({ ...f, amount: e.target.value }))} />
               </div>
               <div className="mb-3">

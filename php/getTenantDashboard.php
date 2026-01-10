@@ -1,10 +1,27 @@
 <?php
 include ("database.php");
 
-header("Access-Control-Allow-Origin: *");
+// Start session and check if tenant is logged in
+if (!isset($_SESSION['tenant_id'])) {
+    http_response_code(401);
+    echo json_encode(["success" => false, "message" => "Unauthorized"]);
+    exit();
+}
+
+$origin = $_SERVER['HTTP_ORIGIN'] ?? "*";
+$allowed_origins = [
+    "http://localhost:5173", 
+    "http://localhost:3000",
+    "https://www.qadersheaven.com"
+];
+
+if(in_array($origin, $allowed_origins)){
+    header("Access-Control-Allow-Origin: " . $origin); 
+}
 header("Access-Control-Allow-Methods: GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
+header("Access-Control-Allow-Credentials: true");
 
 if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
     http_response_code(200);
@@ -17,16 +34,7 @@ if ($conn->connect_error) {
     exit();
 }
 
-$tenant_id = isset($_GET['tenant_id']) ? intval($_GET['tenant_id']) : 0;
-if ($tenant_id <= 0) {
-    http_response_code(400);
-    echo json_encode(["success" => false, "message" => "tenant_id is required"]);
-    exit();
-}
-
-$response = [
-  'tenant_id' => $tenant_id,
-];
+$tenant_id = $_SESSION['tenant_id'];
 
 // Tenant basic and unit info
 $sqlTenant = "SELECT t.name AS tenant_name, t.unit_id, u.unit_number, u.base_rent
