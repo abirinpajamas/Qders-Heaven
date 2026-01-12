@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { useState } from 'react'
 import { 
   Home, 
+  User,
   Users, 
   FileText, 
   DollarSign, 
@@ -83,15 +84,16 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     
     
     
-    { path: '/tenants-highlights', icon: Star, label: "Tenant's Highlights" },
+    //{ path: '/tenants-highlights', icon: Star, label: "Tenant's Highlights" },
     
     // Settings Section
     {
       section: 'Settings',
       icon: Settings,
       items: [
-        { path: '/settings', icon: Settings, label: 'Settings' },
-        { path: '/basic-settings', icon: Sliders, label: 'Basic Settings' }
+        { path: '/settings', icon: Settings, label: 'Basic Settings' },
+       // { path: '/basic-settings', icon: Sliders, label: 'Basic Settings' },
+        { path: '/account-settings', icon: User, label: 'Account Settings' }
       ]
     }
   ]

@@ -1,4 +1,4 @@
-import { Home, User, Receipt, DollarSign, FileText, TrendingUp, TrendingDown, Filter, CreditCard } from 'lucide-react'
+import { Home, User, Receipt, DollarSign, FileText, TrendingUp, TrendingDown, Filter, CreditCard, Settings } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import TenantLayout from '../components/TenantLayout'
 
@@ -296,9 +296,15 @@ const TenantPortal = () => {
 
         <div className="card">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button className="btn-secondary" onClick={() => window.print()}>Download Statement</button>
+            <button 
+              className="btn-primary" 
+              onClick={() => window.location.href = '/tenant-account-settings'}
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Account Settings
+            </button>
           </div>
         </div>
       </div>

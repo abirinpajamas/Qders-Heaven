@@ -23,6 +23,7 @@ import MaintenanceBill from './pages/MaintenanceBill'
 import AdminPortal from './pages/AdminPortal'
 import TenantLogin from './pages/TenantLogin'
 import ProtectedRoutes from './pages/ProtectedRoutes'
+import AccountSettings from './pages/AccountSettings'
 
 function App() {
  const[loggedIn,setloggedIn]=useState(false)
@@ -94,12 +95,18 @@ function App() {
           <Route path="maintenance-bill" element={<MaintenanceBill />} />
           <Route path="settings" element={<Settings />} />
           <Route path="basic-settings" element={<BasicSettings />} />
+          <Route path="account-settings" element={<AccountSettings userType="admin" />} />
         </Route>
         
         {/* Tenant Routes - Standalone */}
         <Route path="/tenant-portal" element={
           <ProtectedRoutes isLoggedIn={loggedIn} isLoading={isLoading} requiredUserType="tenant" userType={userType}>
             <TenantPortal />
+          </ProtectedRoutes>
+        } />
+        <Route path="/tenant-account-settings" element={
+          <ProtectedRoutes isLoggedIn={loggedIn} isLoading={isLoading} requiredUserType="tenant" userType={userType}>
+            <AccountSettings userType="tenant" />
           </ProtectedRoutes>
         } />
         
