@@ -41,6 +41,8 @@ const Header = ({ toggleSidebar }) => {
      const data=await res.json()
      console.log(data)
      if(data.success){
+      localStorage.removeItem('token')
+      localStorage.removeItem('name')
       console.log('logout successful')
       navigate('/admin-signin')
      }

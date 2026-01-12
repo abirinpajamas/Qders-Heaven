@@ -1,6 +1,7 @@
-import { Building2, Users, DollarSign, FileText, TrendingUp, TrendingDown, UserPlus, CreditCard, Receipt } from 'lucide-react'
+import { Building2, Users, DollarSign, FileText, TrendingUp, TrendingDown, UserPlus, CreditCard, Receipt, HelpCircle, BookOpen } from 'lucide-react'
 import { useState,useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'; // Add this line
+import TutorialGuide from '../components/TutorialGuide'
 
 const Home = () => {
 
@@ -10,6 +11,7 @@ const Home = () => {
   const [homevalues,sethomevalues]=useState([])
   const [recentActivities, setRecentActivities] = useState([])
   const [activitiesLoading, setActivitiesLoading] = useState(true)
+  const [showTutorial, setShowTutorial] = useState(false)
 
 
   
@@ -97,8 +99,9 @@ useEffect(()=>{
       })
       .then((res)=>res.json())
       .then((data)=>{
-        sethomevalues(data.res)
         localStorage.setItem('name',data.name)
+        sethomevalues(data.res)
+        
         console.log(data)
 
       })
@@ -117,8 +120,30 @@ useEffect(()=>{
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="card">
-       {/* <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome to Qaders Heaven</h1>*/}
-        <p className="text-gray-600">Property Management Dashboard</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome to Property Heaven</h1>
+            <p className="text-gray-600">Property Management Dashboard</p>
+          </div>
+          <div className="flex items-center space-x-3">
+           {/* 
+            <button
+              onClick={() => setShowTutorial(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              <HelpCircle className="w-5 h-5" />
+              <span>Getting Started Guide</span>
+            </button>
+            */}
+            <button
+              onClick={() => setShowTutorial(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <BookOpen className="w-5 h-5" />
+              <span>Tutorial</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -193,6 +218,9 @@ useEffect(()=>{
           <button className="btn-secondary">View Reports</button>
         </div>
       </div>
+
+      {/* Tutorial Guide */}
+      <TutorialGuide isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
     </div>
   )
 }

@@ -86,7 +86,8 @@ if ($stmt = $conn->prepare($sqlDue)) {
 }
 
 // Paid this month sum for this unit
-$sqlPaidMonth = "SELECT COALESCE(SUM(paid_amount),0) AS total_paid FROM payments WHERE unit_id = ? AND YEAR(paid_on) = YEAR(CURDATE()) AND MONTH(paid_on) = MONTH(CURDATE())";
+$sqlPaidMonth = "SELECT COALESCE(SUM(payments.amount),0) AS total_paid FROM payments 
+inner join bills ON payments.rentbill_id=bills.bill_id WHERE bills.unit_id = ? AND YEAR(payments.paid_on) = YEAR(CURDATE()) AND MONTH(payments.paid_on) = MONTH(CURDATE())";
 if ($stmt = $conn->prepare($sqlPaidMonth)) {
     $stmt->bind_param("i", $unit_id);
     $stmt->execute();
@@ -97,13 +98,14 @@ if ($stmt = $conn->prepare($sqlPaidMonth)) {
 }
 
 // Last payment info
-$sqlLastPayment = "SELECT paid_amount, paid_on FROM payments WHERE unit_id = ? ORDER BY paid_on DESC LIMIT 1";
+$sqlLastPayment = "SELECT payments.amount, payments.paid_on FROM payments 
+inner join bills ON payments.rentbill_id=bills.bill_id WHERE bills.unit_id = ? ORDER BY payments.paid_on DESC LIMIT 1";
 if ($stmt = $conn->prepare($sqlLastPayment)) {
     $stmt->bind_param("i", $unit_id);
     $stmt->execute();
     $res = $stmt->get_result();
     if ($row = $res->fetch_assoc()) {
-        $response['last_payment_amount'] = floatval($row['paid_amount']);
+        $response['last_payment_amount'] = floatval($row['amount']);
         $response['last_payment_date'] = $row['paid_on'];
     } else {
         $response['last_payment_amount'] = 0;

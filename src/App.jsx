@@ -44,6 +44,8 @@ function App() {
       })
       .then(data => {
         if (data.loggedIn) {
+          localStorage.setItem('name',data.name);
+
           setloggedIn(true);
           setUserType(data.user_type); // 'admin' or 'tenant'
         } else {
