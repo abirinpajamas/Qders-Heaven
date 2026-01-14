@@ -33,7 +33,7 @@ if ($conn->connect_error) {
 $queries = [
     'tenants_count' => "SELECT COUNT(*) FROM Tenants WHERE status = 'Current';",
     'properties_count' => "SELECT COUNT(*) FROM properties;",
-    'duebills_count' => "SELECT COUNT(*) FROM bills WHERE status IN ('unpaid', 'pending', 'overdue');",
+    'duebills_count' => "SELECT COUNT(*) FROM bills WHERE status IN ('unpaid','partially paid', 'pending', 'overdue') AND tenant_id is not NULL;",
     
     // Revenue - Current Month
     'revenue' => "SELECT SUM(amount) FROM payments WHERE YEAR(paid_on) = YEAR(CURDATE()) AND MONTH(paid_on) = MONTH(CURDATE()) AND servbill_id IS NULL;",

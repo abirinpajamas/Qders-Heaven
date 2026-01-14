@@ -53,6 +53,13 @@ if (!$conn) {
     $notes = $data->notes;
 
 
+    $updateOldSql = "UPDATE tenants SET status = 'Previous', unit_history=(select base_rent from units where unit_id=?),unit_id=NULL WHERE unit_id = ? AND status = 'Current'";
+    $updateStmt = $conn->prepare($updateOldSql);
+    $updateStmt->bind_param("ii", $unit_id,$unit_id);
+    $updateStmt->execute();
+    $updateStmt->close();
+
+
     $sql = "INSERT INTO tenants (
         unit_id, name, nid_num, father, mother, Occupation, Work_Address, 
         Present_Address, Permanent_address, ward, thana, Citycorp, Advance, 
@@ -68,16 +75,25 @@ if (!$conn) {
     else {
 
         $error=$stmt->error;
-        if (strpos($error, "phone_no") !== false){
-            $response=["success" => false, "message" => "Username already taken." ];
+        if (strpos($error, "phone1") !== false){
+            $response=["success" => false, "message" => "Phone number already taken." ];
             echo json_encode($response);
         }
-        else if (strpos($error, "provider_name") !== false){
-            $response=["success" => false, "message" => "Email already exists." ];
+        else if (strpos($error, "phone2") !== false){
+            $response=["success" => false, "message" => "Phone number already taken." ];
             echo json_encode($response);
         }
+        else if (strpos($error, "nid_num") !== false){
+            $response=["success" => false, "message" => "NID number already exists." ];
+            echo json_encode($response);
+        }
+        else if (strpos($error, "nid_num") !== false){
+            $response=["success" => false, "message" => "NID number already exists." ];
+            echo json_encode($response);
+        }
+
         else {
-        $response=["success" => false, "message" => "Error try again." ];
+        $response=["success" => false, "message" => "Error try again.","error"=>$error ];
         echo json_encode($response);
         }
     }

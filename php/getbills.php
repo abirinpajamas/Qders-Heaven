@@ -22,12 +22,28 @@ if ($conn->connect_error) {
     exit();
 }
 
-$sql = "SELECT b.bill_id, b.unit_id, b.period_start, b.period_end, b.amount,b.paid, b.meter_id, b.status, b.notes,
-        b.changes, u.unit_number, u.property_id, p.name AS property_name, t.name AS tenant_name 
-        FROM bills b INNER JOIN units u ON b.unit_id = u.unit_id 
-        INNER JOIN properties p ON u.property_id = p.property_id 
-        LEFT JOIN tenants t ON t.unit_id = u.unit_id 
-        WHERE t.status = 'Current';";
+$sql = "SELECT 
+    b.bill_id, 
+    b.unit_id, 
+    b.period_start, 
+    b.period_end, 
+    b.amount, 
+    b.paid, 
+    b.meter_id, 
+    b.status, 
+    b.notes, 
+    b.changes, 
+    u.unit_number, 
+    u.property_id, 
+    p.name AS property_name, 
+    t.name AS tenant_name 
+FROM bills b
+-- 1. Join units to get the room number
+INNER JOIN units u ON b.unit_id = u.unit_id 
+-- 2. Join properties to get the building name
+INNER JOIN properties p ON u.property_id = p.property_id 
+-- 3. JOIN DIRECTLY TO TENANT via tenant_id (The most important change)
+INNER JOIN tenants t ON b.tenant_id = t.tenant_id;";
 
 $result = $conn->query($sql);
 

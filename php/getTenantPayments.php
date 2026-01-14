@@ -68,12 +68,14 @@ $payments_sql = "SELECT
     b.period_start,
     b.period_end,
     u.unit_number
-    FROM payments p
-    LEFT JOIN bills b ON p.rentbill_id = b.bill_id
-    LEFT JOIN units u ON b.unit_id = u.unit_id
-    LEFT JOIN tenants t ON u.unit_id = t.unit_id
-    WHERE t.tenant_id = ?
-    ORDER BY p.paid_on DESC";
+FROM payments p
+-- 1. Connect Payment to the specific Bill
+INNER JOIN bills b ON p.rentbill_id = b.bill_id
+-- 2. Connect that specific Bill to the Unit (for the number)
+INNER JOIN units u ON b.unit_id = u.unit_id
+-- 3. Filter using the tenant_id stored inside the Bill
+WHERE b.tenant_id = ?
+ORDER BY p.paid_on DESC;";
 
 $payments_stmt = $conn->prepare($payments_sql);
 $payments_stmt->bind_param("i", $tenant_id);

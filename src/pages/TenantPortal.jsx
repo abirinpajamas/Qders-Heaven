@@ -299,12 +299,12 @@ const TenantPortal = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button className="btn-secondary" onClick={() => window.print()}>Download Statement</button>
             <button 
-              className="btn-primary" 
+              className="btn-primary flex items-center justify-center" 
               onClick={() => window.location.href = '/tenant-account-settings'}
             >
               <Settings className="w-4 h-4 mr-2" />
-              Account Settings
-            </button>
+              <span>Account Settings</span>
+         </button>
           </div>
         </div>
       </div>

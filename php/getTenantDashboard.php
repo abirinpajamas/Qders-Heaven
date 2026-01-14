@@ -75,9 +75,9 @@ if ($stmt = $conn->prepare($sqlTenant)) {
 $unit_id = $response['unit_id'];
 
 // Due bills count for this unit
-$sqlDue = "SELECT COUNT(*) AS due_bills_count FROM bills WHERE unit_id = ? AND status IN ('unpaid','pending','overdue')";
+$sqlDue = "SELECT COUNT(*) AS due_bills_count FROM bills WHERE tenant_id = ? AND status IN ('unpaid','pending','overdue')";
 if ($stmt = $conn->prepare($sqlDue)) {
-    $stmt->bind_param("i", $unit_id);
+    $stmt->bind_param("i", $tenant_id);
     $stmt->execute();
     $res = $stmt->get_result();
     $row = $res->fetch_assoc();
@@ -87,9 +87,9 @@ if ($stmt = $conn->prepare($sqlDue)) {
 
 // Paid this month sum for this unit
 $sqlPaidMonth = "SELECT COALESCE(SUM(payments.amount),0) AS total_paid FROM payments 
-inner join bills ON payments.rentbill_id=bills.bill_id WHERE bills.unit_id = ? AND YEAR(payments.paid_on) = YEAR(CURDATE()) AND MONTH(payments.paid_on) = MONTH(CURDATE())";
+inner join bills ON payments.rentbill_id=bills.bill_id WHERE bills.tenant_id = ? AND YEAR(payments.paid_on) = YEAR(CURDATE()) AND MONTH(payments.paid_on) = MONTH(CURDATE())";
 if ($stmt = $conn->prepare($sqlPaidMonth)) {
-    $stmt->bind_param("i", $unit_id);
+    $stmt->bind_param("i", $tenant_id);
     $stmt->execute();
     $res = $stmt->get_result();
     $row = $res->fetch_assoc();
@@ -99,9 +99,9 @@ if ($stmt = $conn->prepare($sqlPaidMonth)) {
 
 // Last payment info
 $sqlLastPayment = "SELECT payments.amount, payments.paid_on FROM payments 
-inner join bills ON payments.rentbill_id=bills.bill_id WHERE bills.unit_id = ? ORDER BY payments.paid_on DESC LIMIT 1";
+inner join bills ON payments.rentbill_id=bills.bill_id WHERE bills.tenant_id = ? ORDER BY payments.paid_on DESC LIMIT 1";
 if ($stmt = $conn->prepare($sqlLastPayment)) {
-    $stmt->bind_param("i", $unit_id);
+    $stmt->bind_param("i", $tenant_id);
     $stmt->execute();
     $res = $stmt->get_result();
     if ($row = $res->fetch_assoc()) {

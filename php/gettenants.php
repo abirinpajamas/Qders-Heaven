@@ -36,9 +36,9 @@ $sql = "SELECT
     p.name AS property_name  -- Select the property name and alias it for clarity
 FROM
     tenants t
-INNER JOIN
+Left JOIN
     units u ON t.unit_id = u.unit_id
-INNER JOIN
+Left JOIN
     properties p ON u.property_id = p.property_id;";
 
 $sql2="SELECT tenant_id FROM tenant_accounts";

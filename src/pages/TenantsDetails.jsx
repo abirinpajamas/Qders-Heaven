@@ -1,4 +1,4 @@
-import { UserCheck,Plus, User, Phone, Mail, MapPin, Edit, Trash2, Eye, UserPlus } from 'lucide-react'
+import { UserCheck,MapPin,Mail, Phone, UserPlus,User, Plus, Eye, Edit, Trash2, Users, Clock } from 'lucide-react'
 import { useState,useEffect } from 'react'
 import axios from 'axios'
 
@@ -33,7 +33,7 @@ const TenantsDetails = () => {
   const [tenantdata, settenantdata] = useState([]);
   const [propertydata, setpropertydata] = useState([]);
   const [popup,setpopup]=useState(false);
-  const [selectedId,setselectedId]=useState(null);
+  const [selectedId,setselectedId]=useState({id:null,status:null});
   const [refresh,setrefresh]=useState(false);
   const [editing,setEditing]=useState({id:null, field:null});
   const [tempValue,setTempValue]=useState("");
@@ -52,6 +52,7 @@ const TenantsDetails = () => {
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState('');
   const [portalSuccess, setPortalSuccess] = useState('');
+  const [tenantView, setTenantView] = useState('Current'); // 'Current' or 'Previous'
 
 
 
@@ -76,6 +77,15 @@ const TenantsDetails = () => {
      }) 
 
   },[refresh])
+
+  // Filter tenants based on view
+  const filteredTenants = tenantdata.filter(tenant => {
+    if (tenantView === 'Current') {
+      return tenant.Status !== 'Previous';
+    } else {
+      return tenant.Status === 'Previous';
+    }
+  });
 
   useEffect(()=>{
 
@@ -149,9 +159,13 @@ const TenantsDetails = () => {
 
   const handledelete = async (id) => {
     setpopup(false)
+    console.log(id)
     try{
-      const response = await axios.post('http://localhost/qadersheavennew/php/deletetenant.php', { id }, { withCredentials: true })
+      const response = await axios.post('http://localhost/qadersheavennew/php/deletetenant.php', { id:id.id, status:id.status }, { withCredentials: true })
       console.log(response.data)
+      if(response.data.success){
+        setrefresh(!refresh)
+      }
       settenantdata((prev) => prev.filter(t => t.tenant_id !== id))
     } catch(err){
       console.error(err)
@@ -159,18 +173,23 @@ const TenantsDetails = () => {
   }
 
   const updatetenant = async () => {
+    console.log(editing.id)
+    console.log(editing.field)
+    console.log(name)
     try{
       const response = await axios.post('http://localhost/qadersheavennew/php/updatetenant.php', { 
         unit_id: editing.id,
         field: editing.field,
         value: editing.field === 'base_rent' ? baseRent : name
       }, { withCredentials: true })
+      
       console.log(response.data)
       setrefresh(!refresh)
       setEditing({id:null,field:null})
       setBaseRent('')
       setName('')
     } catch(err){
+      
       console.error(err)
       setEditing({id:null,field:null})
       setBaseRent('')
@@ -231,6 +250,7 @@ const TenantsDetails = () => {
   }
 
   const openPortalModal = (tenant) => {
+    
     setSelectedTenant(tenant);
     setPortalForm({
       email: tenant.email || '', // Pre-fill with tenant's email if available
@@ -249,14 +269,44 @@ const TenantsDetails = () => {
           <h1 className="text-2xl font-bold text-gray-800">Tenants Details</h1>
           <p className="text-gray-600 mt-1">Manage tenant information</p>
         </div>
-        <button className="btn-primary flex items-center space-x-2" onClick={()=>setShowForm(true)}>
-          <Plus className="w-5 h-5" />
-          <span>Add Tenant</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          {/* Tenant View Toggle */}
+          <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setTenantView('Current')}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                tenantView === 'Current'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span>Current</span>
+            </button>
+            <button
+              onClick={() => setTenantView('Previous')}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                tenantView === 'Previous'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              <span>Previous</span>
+            </button>
+          </div>
+          
+          {/* Add Tenant Button - Only show for Current tenants */}
+            <button className="btn-primary flex items-center space-x-2" onClick={()=>setShowForm(true)}>
+              <Plus className="w-5 h-5" />
+              <span>Add Tenant</span>
+            </button>
+          
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {tenantdata.map((tenant) => (
+        {filteredTenants.map((tenant) => (
           <div key={tenant.tenant_id} className="card hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between mb-4">
               <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
@@ -268,16 +318,15 @@ const TenantsDetails = () => {
             </div>
             <div className="flex items-center space-x-2"> {/* space-x-2 adds the gap */}
   <h3 className="text-lg font-bold text-gray-800">
-    <span 
-      
-    > 
-      {editing.id === tenant.tenant_id && editing.field === 'name' ? (
+    <span> 
+      {tenantView === 'Current' && editing.id === tenant.tenant_id && editing.field === 'name' ? (
         <input 
           type="text" 
           value={name}
           className="border-b-2 border-blue-500 outline-none bg-transparent" 
           onChange={(e) => setName(e.target.value)} 
-          onBlur={() => setEditing({id: null, field: null})} 
+          onBlur={() => name!=""?updatetenant():setEditing({id: null, field: null})} 
+          onKeyDown={(e) => e.key === 'Enter' ? name!=""?updatetenant():setEditing({id: null, field: null}) : null}
           autoFocus
         /> 
       ) : (
@@ -286,8 +335,8 @@ const TenantsDetails = () => {
     </span>
   </h3>
 
-  {/* Only show the button when NOT editing */}
-  {!(editing.id === tenant.tenant_id && editing.field === 'name') && (
+  {/* Only show the button when NOT editing and only for Current tenants */}
+  {tenantView === 'Current' && !(editing.id === tenant.tenant_id && editing.field === 'name') && (
     <button 
       className="p-1 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
       onClick={() => { setEditing({id: tenant.tenant_id, field: 'name'}); }}
@@ -315,35 +364,32 @@ const TenantsDetails = () => {
 
             <div className="pt-4 border-t border-gray-200">
               <div className="flex items-center justify-between mb-3">
-                
-                
                 <span className="text-sm text-gray-600">Monthly Rent</span>
                 <div>
-                <span className="text-lg font-bold text-primary-600">
-                  {
-                    editing.id === tenant.unit_id && editing.field === 'base_rent' ? (
+                  <span className="text-lg font-bold text-primary-600">
+                    {tenantView === 'Current' && editing.id === tenant.unit_id && editing.field === 'base_rent' ? (
                       <input 
                         type="number" 
-                        value={null}
+                        value={baseRent}
                         className="w-20 border-b-2 border-blue-500 outline-none bg-transparent" 
                         onChange={(e) => setBaseRent(e.target.value)} 
                         onBlur={() => baseRent>0? updatetenant():setEditing({ id: null, field: null })} 
+                        onKeyDown={(e) => e.key === 'Enter' ? baseRent>0? updatetenant():setEditing({ id: null, field: null }) : null}
                         autoFocus
                       /> 
                     ) : (
-                      '৳' + tenant.base_rent.toLocaleString()
-                    )
-                  }
-                </span>
+                      tenant.Status==='Current'?'৳' + tenant.base_rent.toLocaleString():'৳' + tenant.unit_history.toLocaleString()
+                    )}
+                  </span>
 
-                {!(editing.id === tenant.unit_id && editing.field === 'base_rent') && (
-                  <button 
-                    className="p-1 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
-                    onClick={() => { setEditing({id: tenant.unit_id, field: 'base_rent'}); }}
-                  >
-                    <Edit className="w-3 h-3" />
-                  </button>
-                )}
+                  {tenantView === 'Current' && !(editing.id === tenant.unit_id && editing.field === 'base_rent') && (
+                    <button 
+                      className="p-1 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                      onClick={() => { setEditing({id: tenant.unit_id, field: 'base_rent'}); }}
+                    >
+                      <Edit className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="flex items-center space-x-2">
@@ -352,25 +398,35 @@ const TenantsDetails = () => {
                   <Eye className="w-4 h-4" />
                 </button>
                 */}
-                {tenantaccounts.some(acc=>acc.tenant_id===tenant.tenant_id)?(
-                  <span className="flex-1 btn-icon bg-green-400">
-                    <UserCheck className="w-4 h-4" />
-                  </span>
-                ):(
-                <button 
-                  className="flex-1 btn-icon bg-blue-200 hover:bg-blue-400 text-blue-700" 
-                  onClick={() => openPortalModal(tenant)}
-                  title="Register Portal Account"
-                >
-                  <UserPlus className="w-4 h-4" />
-                </button>
+                {tenantView === 'Current' && (
+                  <>
+                    {tenantaccounts.some(acc=>acc.tenant_id===tenant.tenant_id)?(
+                      <span className="flex-1 btn-icon bg-green-400">
+                        <UserCheck className="w-4 h-4" />
+                      </span>
+                    ):(
+                    <button 
+                      className="flex-1 btn-icon bg-blue-200 hover:bg-blue-400 text-blue-700" 
+                      onClick={() => openPortalModal(tenant)}
+                      title="Register Portal Account"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                    </button>
+                    )}
+                    </>
                 )}
-                {role==='super admin' &&(
-                <button className="flex-1 btn-icon bg-red-100 hover:bg-red-300 text-red-700" onClick={() => { setpopup(true); setselectedId(tenant.tenant_id); }}>
-                  <Trash2 className="w-4 h-4" />
-                </button>
-                )}
+                    {role==='super admin' &&(
+                    <button className="flex-1 btn-icon bg-red-100 hover:bg-red-300 text-red-700" onClick={() => { setpopup(true); tenantView==='Current'?setselectedId({id:tenant.unit_id,status:tenantView}):setselectedId({id:tenant.tenant_id,status:tenantView}); }}>
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    )}
+                  
                 
+                {tenantView === 'Previous' && (
+                  <span className="flex-1 text-center text-sm text-gray-500 italic">
+                    Read-only
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -385,7 +441,7 @@ const TenantsDetails = () => {
         Confirm Deletion
       </h2>
       <p className="text-gray-700 text-center">
-        Are you sure you want to delete this tenant? This action cannot be undone.
+        Are you sure you want to Remove this tenant? This action cannot be undone.
       </p>
       <div className="flex justify-between mt-6">
         <button

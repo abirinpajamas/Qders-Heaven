@@ -1,10 +1,21 @@
 <?php
 include("database.php");
 
-header("Access-Control-Allow-Origin: *");
+$origin = $_SERVER['HTTP_ORIGIN'] ?? "*";
+$allowed_origins = [
+    "http://localhost:5173", 
+    "http://localhost:3000",
+    "https://www.qadersheaven.com"
+];
+
+if(in_array($origin, $allowed_origins)){
+    header("Access-Control-Allow-Origin: " . $origin); 
+}
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
+header("Access-Control-Allow-Credentials: true");
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -26,17 +37,21 @@ if (!$unit_id || !$field) {
 }
 
 // 3. Whitelist allowed columns (Security step: prevents updating password/sensitive fields)
-$allowed_fields = ['name', 'phone1', 'phone2', 'status', 'start_date', 'base_rent'];
+$allowed_fields_tenants = ['name', 'phone1', 'phone2', 'status', 'start_date', ];
+$allowed_fields_units=['base_rent'];
 
-if (!in_array($field, $allowed_fields)) {
-    http_response_code(403);
+if (!in_array($field, $allowed_fields_tenants) && !in_array($field, $allowed_fields_units)) {    http_response_code(403);
     echo json_encode(["success" => false, "message" => "Updating this field is not allowed."]);
     exit();
 }
 
 // 4. Prepare the dynamic SQL
 // Note: Column names cannot be passed as ? placeholders, so we use the whitelisted $field variable directly.
+if(in_array($field,$allowed_fields_units)){
 $sql = "UPDATE units SET $field = ? WHERE unit_id = ?";
+}else{
+    $sql = "UPDATE tenants SET $field = ? WHERE tenant_id = ?";
+}
 
 $stmt = $conn->prepare($sql);
 

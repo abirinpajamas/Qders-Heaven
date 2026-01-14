@@ -28,20 +28,42 @@ if (!$conn) {
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $data = json_decode(file_get_contents("php://input"));
     $id = isset($data->id) ? intval($data->id) : 0;
+    $status = isset($data->status) ? $data->status : '';
 
     if ($id <= 0) {
         echo json_encode(["success" => false, "message" => "Invalid tenant id."]);
         exit();
     }
-
-    $sql = "DELETE FROM tenants WHERE tenant_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
+  
+   if ($status === 'Current') {
+        $sql="UPDATE units SET status='vacant' WHERE unit_id=?";
+        $stmt = $conn->prepare($sql);
+        // Bind 2 parameters
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        // This query has 2 placeholders (?)
+        $sql = "UPDATE tenants SET status = 'Previous', unit_history=(SELECT base_rent FROM units WHERE unit_id=?), unit_id=NULL WHERE unit_id = ? AND status = 'Current'";
+        $stmt = $conn->prepare($sql);
+        // Bind 2 parameters
+        $stmt->bind_param("ii", $id, $id);
+    } 
+    else if ($status === 'Previous') {
+        // This query has 1 placeholder (?)
+        $sql = "DELETE FROM tenants WHERE tenant_id = ? AND status = 'Previous'";
+        $stmt = $conn->prepare($sql);
+        // Bind only 1 parameter
+        $stmt->bind_param("i", $id);
+    } 
+    else {
+        echo json_encode(["success" => false, "message" => "Unknown status type."]);
+        exit();
+    }
 
     if ($stmt->execute()) {
-        echo json_encode(["success" => true, "message" => "Delete successful"]);
+        echo json_encode(["success" => true, "message" => "Operation successful"]);
     } else {
-        echo json_encode(["success" => false, "message" => "Error deleting tenant.", "error" => $stmt->error]);
+        echo json_encode(["success" => false, "message" => "Database error.", "error" => $stmt->error]);
     }
+    
     $stmt->close();
 }
