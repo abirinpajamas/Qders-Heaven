@@ -40,10 +40,22 @@ if (!$conn) {
 
    
 
-    $sql = "insert into bills (unit_id, period_start, period_end, amount, meter_id, status, notes) 
-       values (?,?,?,?,?,?,?)";
+
+    $sql="select tenant_id from tenants where unit_id=?";
+    $stmt1=$conn->prepare($sql);
+    $stmt1->bind_param("i",$unit_id);
+    $stmt1->execute();
+    $result=$stmt1->get_result();
+
+ if($result->num_rows>0){
+ 
+
+    $row = $result->fetch_assoc();
+    $tenant_id = $row['tenant_id'];
+    $sql = "insert into bills (unit_id,tenant_id, period_start, period_end, amount, meter_id, status, notes) 
+       values (?,?,?,?,?,?,?,?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("issiiss", $unit_id, $startperiod, $endperiod, $rentAmount, $meterid, $status, $note);
+    $stmt->bind_param("iissiiss", $unit_id,$tenant_id, $startperiod, $endperiod, $rentAmount, $meterid, $status, $note);
 
     if ($stmt->execute()) {
         $response=["success" => true, "message" => "Input successful"];
@@ -65,7 +77,15 @@ if (!$conn) {
         echo json_encode($response);
         }
     }
-    $stmt->close();
+        $stmt->close();
+
+
+ }else{
+    $response=["success" => false, "message" => "No active tenant staying in the Unit" ];
+    echo json_encode($response);
+    }
+    $stmt1->close();
+
     }
     
     $conn->close();

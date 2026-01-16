@@ -24,15 +24,14 @@ if ($conn->connect_error) {
 }
 
 
-$sql = "SELECT units.*,properties.name  FROM units inner join properties ON properties.property_id = units.property_id";
+$sql = "SELECT units.*,properties.name,tenants.tenant_id,tenants.name as tenantname FROM units inner join properties ON properties.property_id = units.property_id left join tenants on tenants.unit_id=units.unit_id";
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {
     $units = $result->fetch_all(MYSQLI_ASSOC);
     echo json_encode($units);
 } else {
-    echo "Units not found.";
-    exit;
+    echo json_encode([]);
 }
 
 $conn->close();

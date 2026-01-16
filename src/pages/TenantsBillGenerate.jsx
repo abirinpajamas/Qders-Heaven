@@ -16,6 +16,7 @@ const TenantsBillGenerate = () => {
   const [note, setNote] = useState('')
   const [pdfUrl, setPdfUrl] = useState(null)
   const [popup, setpopup] = useState(false);
+  const [message,setmessage]=useState('')
   const now = new Date();
   const [monthlyBillsForm, setMonthlyBillsForm] = useState({
     startperiod: new Date(now.getFullYear(), now.getMonth(), 2)
@@ -42,7 +43,7 @@ const TenantsBillGenerate = () => {
   fetch('http://localhost/qadersheavennew/php/getunits.php')
   .then((res)=>res.json())
   .then((data)=>{
-    setUnits(data)
+    setUnits(data||[])
     console.log(data)
   })
  },[])
@@ -51,7 +52,7 @@ const TenantsBillGenerate = () => {
   fetch('http://localhost/qadersheavennew/php/fetchproperty.php')
   .then((res)=>res.json())
   .then((data)=>{
-    setProperty(data)
+    setProperty(data?.success ? data.data : [])
     console.log(data)
   })
  },[])
@@ -72,7 +73,12 @@ const TenantsBillGenerate = () => {
     }, { withCredentials: true })
     console.log(response.data.success)
     console.log(response.data)
+    if(response.data.success){
+      setmessage('')
     await generatePdf()
+    }else{
+     setmessage(response.data.message)
+    }
 
     }catch(err){
     console.error(err)
@@ -263,7 +269,7 @@ const handleGenerateMonthlyBills = async () => {
             onChange={(e)=>setSelectedUnit(e.target.value)}
             className="input-field" required>
               <option value=''>Select Unit</option>
-              {units.filter(unit=>unit.property_id===selectedProperty).map((unit)=>(
+              {(Array.isArray(units) ? units : []).filter(unit => unit.property_id === selectedProperty).map((unit)=>(
               <option key={unit.unit_id} value={unit.unit_id}>
                 {unit.unit_number}
                 </option>
@@ -341,7 +347,11 @@ const handleGenerateMonthlyBills = async () => {
             <span className="text-primary-600">৳{rentAmount}</span>
           </div>
         </div>
-
+        {message &&(
+        <div>
+          <span className="text-red-700"  >{message}</span>
+        </div>
+        )}
         <div className="mt-6 flex space-x-4">
           <button type="submit" className="btn-success flex items-center space-x-2">
             <FileSpreadsheet className="w-5 h-5" />
@@ -367,13 +377,13 @@ const handleGenerateMonthlyBills = async () => {
       <div className="card">
         <h2 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button className="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-left transition-colors"
-          onClick={() => setpopup(true)}>
+          <button title='still in development' className="p-4 bg-green-50 hover:bg-green-100 rounded-lg text-left transition-colors"
+          >
             <FileSpreadsheet className="w-8 h-8 text-green-600 mb-2" />
             <h3 className="font-medium text-gray-800">Bulk Bill Generation</h3>
             <p className="text-sm text-gray-600 mt-1">Multiple properties</p>
           </button>
-          <button className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg text-left transition-colors">
+          <button title='still in development' className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg text-left transition-colors">
             <Plus className="w-8 h-8 text-purple-600 mb-2" />
             <h3 className="font-medium text-gray-800">Custom Bill</h3>
             <p className="text-sm text-gray-600 mt-1">Create custom bill</p>

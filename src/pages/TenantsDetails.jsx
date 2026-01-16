@@ -1,6 +1,7 @@
 import { UserCheck,MapPin,Mail, Phone, UserPlus,User, Plus, Eye, Edit, Trash2, Users, Clock } from 'lucide-react'
 import { useState,useEffect } from 'react'
 import axios from 'axios'
+import { Link } from 'react-router-dom'
 
 const TenantsDetails = () => {
 
@@ -44,6 +45,7 @@ const TenantsDetails = () => {
   // Portal account creation states
   const [showPortalModal, setShowPortalModal] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState(null);
+  const [unitmessage, setunitmessage] = useState('');
   const [portalForm, setPortalForm] = useState({
     email: '',
     password: '',
@@ -52,8 +54,9 @@ const TenantsDetails = () => {
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState('');
   const [portalSuccess, setPortalSuccess] = useState('');
+  const [tenantname,settenantname]=useState('');
   const [tenantView, setTenantView] = useState('Current'); // 'Current' or 'Previous'
-
+  const [warning,setWarning]=useState(false);
 
 
   
@@ -64,7 +67,7 @@ const TenantsDetails = () => {
     })
     .then((res)=>res.json())
     .then((data)=>{
-      settenantdata(data.tenants)
+      settenantdata(data.tenants?data.tenants:[])
       setRole(data.role)
       settenantaccounts(data.tenantsaccounts)
       console.log('tenant data',data)    
@@ -92,15 +95,23 @@ const TenantsDetails = () => {
     fetch('http://localhost/qadersheavennew/php/getunits.php')
       .then((res)=>res.json())
       .then((data)=>{
-        setunitdata(data);
-        console.log(data);
+        if(data && data.length>0){
+          setunitdata(data);
+          console.log(data);
+          setunitmessage("");
+        }else{
+          console.log(data);
+          setunitdata([]);
+          setunitmessage("Add Units to Register Tenants ");
+        }
       })
       .catch((err)=>{
         console.error('Error fetching unit data:', err);
+        
       });
 
 
-  },[])
+  },[refresh])
 
   const Editablefield=({id,field,value,onSave})=>{
     const isediting=editing.id===id && editing.field===field;
@@ -120,7 +131,15 @@ const TenantsDetails = () => {
 
   const handlesubmit=async (e)=>{
 
+   if(e && e.preventDefault){
     e.preventDefault();
+   }
+   if(tenantname){
+    setWarning(true);
+    return;
+    
+   }
+
     setShowForm(false)
 
     console.log(name)
@@ -155,6 +174,7 @@ const TenantsDetails = () => {
       }catch(err){
         console.error(err)
       }
+    
   }
 
   const handledelete = async (id) => {
@@ -304,7 +324,13 @@ const TenantsDetails = () => {
           
         </div>
       </div>
-
+      {unitmessage &&(
+      <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+        <span className="block sm:inline">No units found. Add units in{' '}
+          <Link to="/unit-entry" className="font-bold underline hover:text-blue-800">Units Page</Link>.
+        </span>
+      </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredTenants.map((tenant) => (
           <div key={tenant.tenant_id} className="card hover:shadow-lg transition-shadow">
@@ -578,7 +604,7 @@ const TenantsDetails = () => {
    
     {showForm && (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50 p-4">
-    <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-sky-100 max-h-[90vh] overflow-y-auto">
+    <div className="relative bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-sky-100 max-h-[90vh] overflow-y-auto">
       <form
         onSubmit={handlesubmit}
         className="p-6 space-y-2.5"
@@ -586,23 +612,34 @@ const TenantsDetails = () => {
         <h2 className="text-xl font-semibold text-center text-sky-700 mb-4">
           Register New Renter
         </h2>
+        <button 
+        type="button"
+        onClick={()=>{setShowForm(false);setWarning(false)}}
+        className='absolute top-4 right-4 text-gray-500 hover:text-red-700'>
+          <span className="text-2xl font-bold">&times;</span>
+        </button>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Unit Selection */}
-          <div>
+             <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Unit
             </label>
             <select
-              value={unitid}
-              onChange={(e) => setunitid(e.target.value)}
+              value={unitid ? `${unitid},${tenantname}` : ''}
+              onChange={(e) => {
+                const [uid,tid]=e.target.value.split(',');
+                setunitid(uid)
+                settenantname(tid || '')
+              }}
               className="w-full border border-sky-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 focus:outline-none"
               required
             >
               <option value="">Select Unit</option>
+              {unitmessage && <option value="">No units</option>}
               {unitdata.map((unit) => (
-                <option key={unit.unit_id} value={unit.unit_id}>
-                  {unit.unit_number}
+                <option key={unit.unit_id} value={`${unit.unit_id},${unit.tenantname || ''}`}>
+                  {unit.unit_number}-{unit.tenant_id ? 'Occupied' : 'Available'}
                 </option>
               ))}
             </select>
@@ -965,6 +1002,7 @@ const TenantsDetails = () => {
             rows="3"
           />
         </div>
+        
 
         {/* Buttons */}
         <div className="flex justify-between mt-6">
@@ -984,11 +1022,47 @@ const TenantsDetails = () => {
         </div>
       </form>
     </div>
+    {warning && (
+  /* This div creates the 'overlay' effect covering the entire form area */
+  <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-[2px] rounded-2xl p-6">
+    <div className="bg-white border-2 border-red-400 text-red-700 px-6 py-8 rounded-xl shadow-2xl max-w-sm text-center transform scale-105 transition-all">
+      <div className="mb-4">
+        <svg className="w-12 h-12 mx-auto text-red-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <strong className="text-xl font-bold">Important Warning</strong>
+      </div>
+      
+      <p className="text-gray-700 mb-6">
+        Registering this tenant will remove <span className="font-bold text-red-700">Mr. {tenantname}</span> from this unit. Are you sure you want to proceed?
+      </p>
+
+      <div className="flex justify-center gap-4">
+        <button
+          type="button"
+          onClick={() => { settenantname("");setWarning(false); handlesubmit(); }}
+          className="px-5 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 font-semibold shadow-md transition-colors"
+        >
+          Yes, Replace
+        </button>
+        <button
+          type="button"
+          onClick={() => setWarning(false)}
+          className="px-5 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 font-semibold transition-colors"
+        >
+          Go Back
+        </button>
+      </div>
+    </div>
   </div>
+)}
+  </div>
+  
 
     )}
     </>
   )
+  
 }
 
 export default TenantsDetails

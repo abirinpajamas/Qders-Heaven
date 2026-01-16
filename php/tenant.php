@@ -53,6 +53,9 @@ if (!$conn) {
     $notes = $data->notes;
 
 
+
+
+    
     $updateOldSql = "UPDATE tenants SET status = 'Previous', unit_history=(select base_rent from units where unit_id=?),unit_id=NULL WHERE unit_id = ? AND status = 'Current'";
     $updateStmt = $conn->prepare($updateOldSql);
     $updateStmt->bind_param("ii", $unit_id,$unit_id);

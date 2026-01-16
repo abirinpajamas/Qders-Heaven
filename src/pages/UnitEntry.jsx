@@ -1,7 +1,7 @@
 import { Plus, DoorOpen, Edit, Trash2, Eye } from 'lucide-react'
 import { useState,useEffect } from 'react'
 import axios from 'axios'
-
+import { Link } from 'react-router-dom';
 
 
 
@@ -22,6 +22,7 @@ const UnitEntry = () => {
     const [state,setstate]=useState(false)
     const [popup,setpopup]=useState(false)
     const [selectedId,setselectedId]=useState(null)
+    const [propmessage,setpropmessage]=useState('')
 
   const units = [
     { id: 1, unitNo: 'Unit 1', property: 'Rangs Qaders Heaven', floor: 'Ground Floor', size: '1200 sqft', bedrooms: 3, status: 'Occupied' },
@@ -35,9 +36,13 @@ const UnitEntry = () => {
     fetch('http://localhost/qadersheavennew/php/fetchproperty.php')
      .then((res)=>res.json())
      .then((data)=>{
-
-      setpropertydata(data);
+      if(data.success){
+      setpropertydata(data.data);
       console.log(data)
+      }else{
+        console.log(data.message)
+        setpropmessage('Add properties in the Properties Page')
+      }
      })
       .catch((err)=>console.error(err));
 
@@ -47,7 +52,7 @@ const UnitEntry = () => {
      .then((res)=>res.json())
      .then((data)=>{
 
-      setunitdata(data);
+      setunitdata(data? data : []);
       console.log(data)
      })
       .catch((err)=>console.error(err));
@@ -105,7 +110,15 @@ const UnitEntry = () => {
           <span>Add Unit</span>
         </button>
       </div>
-
+   {propmessage && (
+     <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4" role="alert">
+       <p>No properties found. Add properties in the {' '}
+        <Link to="/property" className="font-bold underline hover:text-yellow-900">
+          Properties Page
+        </Link>.
+      </p>
+     </div>
+   )}
       <div className="table-container">
         <table className="w-full">
           <thead className="table-header">
@@ -114,7 +127,7 @@ const UnitEntry = () => {
               <th className="px-6 py-4 text-left text-sm font-semibold">Unit No</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">Property</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">Base Rent(৳)</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold">Size</th>
+              <th className="px-6 py-4 text-left text-sm font-semibold">Size(sq.ft)</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">Bedrooms</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
               <th className="px-6 py-4 text-left text-sm font-semibold">Action</th>
@@ -347,7 +360,6 @@ const UnitEntry = () => {
               >
                 <option value="">Select Status</option>
                 <option value="vacant">Vacant</option>
-                <option value="occupied">Occupied</option>
                 <option value="under_renovation">Under Renovation</option>
               </select>
                 

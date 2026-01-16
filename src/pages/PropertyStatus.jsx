@@ -14,8 +14,9 @@ const PropertyStatus = () => {
     fetch('http://localhost/qadersheavennew/php/getpropertystatus.php')
     .then((res)=>res.json())
     .then((data)=>{
-      setStatusdata(data.details)
-      setunitdata(data.count)
+      setStatusdata(data.details||[])
+      console.log(data)
+      setunitdata(data.count||[])
       console.log(data.count) 
       })
     .catch((error) => { // <-- ADD THIS CATCH BLOCK

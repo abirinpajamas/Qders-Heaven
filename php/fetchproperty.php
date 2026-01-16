@@ -29,10 +29,10 @@ $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {
     $properties = $result->fetch_all(MYSQLI_ASSOC);
-    echo json_encode($properties);
+    echo json_encode(["success"=>true, "data"=>$properties]);
 } else {
-    echo "Property not found.";
-    exit;
+   
+   echo json_encode(["success"=>false,"message"=>"No properties found"]);
 }
 
 $conn->close();

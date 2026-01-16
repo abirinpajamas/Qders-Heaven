@@ -41,7 +41,7 @@ const TenantsBill = () => {
 
     fetch('http://localhost/qadersheavennew/php/fetchproperty.php')
     .then(res=>res.json())
-    .then(data=>setproperty(data||[]))
+    .then(data=>setproperty(data?.success ? data.data : []))
     .catch(console.error)
    },[])
   const isCurrentMonth = (dateStr) => {

@@ -37,7 +37,7 @@ const Property = () => {
       fetch('http://localhost/qadersheavennew/php/fetchproperty.php')
       .then((res)=>res.json())
       .then((data)=>{
-        setpropertydata(data)
+        setpropertydata(data?.success ? data.data : [])
         console.log(data)
 
       })
