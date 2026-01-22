@@ -33,7 +33,7 @@ const TenantsBill = () => {
   useEffect(() => {
     fetch('http://localhost/qadersheavennew/php/getbills.php')
       .then(res => res.json())
-      .then(data => setBills(data || []))
+      .then(data => {setBills(data || []);console.log('bills',data)})
       .catch(console.error)
   }, [refresh])
 
@@ -159,7 +159,7 @@ const displayBills = bills.filter(bill => {
             {displayBills.map((bill) => (
               <tr key={bill.bill_id} className="table-row">
                 <td className="px-6 py-4 text-sm font-medium text-gray-700">{`${bill.bill_id}`}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{bill.tenant_name || '-'}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{bill.tenant_name || '-'} ({bill.tenantstatus ==='Previous'? 'Previous' : ''})</td>
                 <td className="px-6 py-4 text-sm text-gray-700">{bill.unit_number}</td>
                 <td className="px-6 py-4 text-sm text-gray-700">{new Date(bill.period_start).toLocaleString('en-US', { month: 'long', year: 'numeric' })}</td>
                 <td className="px-6 py-4 text-sm font-medium text-gray-700">৳{Number(bill.amount-bill.paid).toLocaleString()}</td>

@@ -638,8 +638,8 @@ const TenantsDetails = () => {
               <option value="">Select Unit</option>
               {unitmessage && <option value="">No units</option>}
               {unitdata.map((unit) => (
-                <option key={unit.unit_id} value={`${unit.unit_id},${unit.tenantname || ''}`}>
-                  {unit.unit_number}-{unit.tenant_id ? 'Occupied' : 'Available'}
+                <option className=" rounded-lg bg-white-700" key={unit.unit_id} value={`${unit.unit_id},${unit.tenantname || ''}`}>
+                  {unit.name}-{unit.unit_number}{unit.tenant_id ? '(Occupied)' : '(Available)'}
                 </option>
               ))}
             </select>

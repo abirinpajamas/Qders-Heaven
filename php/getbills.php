@@ -36,7 +36,8 @@ $sql = "SELECT
     u.unit_number, 
     u.property_id, 
     p.name AS property_name, 
-    t.name AS tenant_name 
+    t.name AS tenant_name,
+    t.Status as tenantstatus 
 FROM bills b
 -- 1. Join units to get the room number
 INNER JOIN units u ON b.unit_id = u.unit_id 
