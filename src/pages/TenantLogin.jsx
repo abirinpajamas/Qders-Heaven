@@ -32,7 +32,7 @@ const TenantLogin = () => {
       const payload ={ email: formData.email, password: formData.password }
         
 
-      const response = await axios.post(`http://localhost/qadersheavennew/php/tenant-login.php`, payload, { withCredentials: true })
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/tenant-login.php`, payload, { withCredentials: true })
       
       if (response.data && response.data.success) {
         console.log("response tenant",response.data)

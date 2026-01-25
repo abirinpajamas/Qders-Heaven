@@ -25,7 +25,7 @@ const AdminManagement = () => {
 
 
   useEffect(() => {
-    fetch('http://localhost/qadersheavennew/php/getusers.php',{
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/getusers.php`,{
       method: 'GET',
       credentials: 'include'
     })
@@ -44,7 +44,7 @@ const AdminManagement = () => {
     setpopup(false)
     console.log(`this is the id ${id}`)
     try{
-      const response = await axios.post('http://localhost/qadersheavennew/php/deleteuser.php', { id }, { withCredentials: true })
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/deleteuser.php`, { id }, { withCredentials: true })
       console.log(response.data)
       setrefresh(!refresh)
     } catch(err){
@@ -82,7 +82,7 @@ const AdminManagement = () => {
     
     try {
       console.log('formData', formData)
-      const response = await axios.post('http://localhost/qadersheavennew/php/adduser.php', {
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/adduser.php`, {
         fname: formData.fname,
         lname: formData.lname,
         email: formData.email,

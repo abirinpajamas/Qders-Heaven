@@ -1,4 +1,4 @@
-import { Building2, Users, DollarSign, FileText, TrendingUp, TrendingDown, UserPlus, CreditCard, Receipt, HelpCircle, BookOpen } from 'lucide-react'
+import { Building2, Users, DollarSign, FileText, TrendingUp, TrendingDown, UserPlus, CreditCard, Receipt, HelpCircle, BookOpen, MessageCircle, X, Send } from 'lucide-react'
 import { useState,useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'; // Add this line
 import TutorialGuide from '../components/TutorialGuide'
@@ -12,6 +12,71 @@ const Home = () => {
   const [recentActivities, setRecentActivities] = useState([])
   const [activitiesLoading, setActivitiesLoading] = useState(true)
   const [showTutorial, setShowTutorial] = useState(false)
+  
+  // Chatbot states
+  const [isChatOpen, setIsChatOpen] = useState(false)
+  const [messages, setMessages] = useState([])
+  const [currentMessage, setCurrentMessage] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  
+  // Handle sending message to AI
+  const handleSendMessage = async () => {
+    if (!currentMessage.trim()) return
+    
+    const userMessage = currentMessage.trim()
+    setCurrentMessage('')
+    setIsLoading(true)
+    
+    // Add user message to chat
+    setMessages(prev => [...prev, { type: 'user', text: userMessage }])
+    
+    try {
+      // Call our PHP backend API
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/aichat.php`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          prompt: userMessage,
+        }),
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        setMessages(prev => [...prev, { type: 'ai', text: data.response }])
+      } else {
+        setMessages(prev => [...prev, { type: 'ai', text: 'Sorry, I encountered an error: ' + data.message }])
+      }
+      
+    } catch (error) {
+  console.error('Error sending message:', error)
+  
+  // Try to get the response text
+  if (error.response) {
+    const text = await error.response.text()
+    console.error('Error response body:', text)
+  }
+  
+  setMessages(prev => [...prev, { type: 'ai', text: 'Sorry, I encountered an error. Please try again.' }])
+} finally {
+      setIsLoading(false)
+    }
+  }
+  
+  // Handle Enter key press
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSendMessage()
+    }
+  }
 
 
   
@@ -19,7 +84,7 @@ const Home = () => {
     {
       title: 'Total Properties',
       value:  homevalues.properties_count || '0',
-      change: `${(((homevalues.properties_count - homevalues.properties_prev) / homevalues.properties_prev) * 100).toFixed(0)}%`,
+      change: homevalues.properties_prev>0?`${(((homevalues.properties_count - homevalues.properties_prev) / homevalues.properties_prev) * 100).toFixed(0)}%`:'',
       trend: homevalues.properties_count >= homevalues.properties_prev ? 'up' : 'down',
       icon: Building2,
       color: 'bg-blue-500'
@@ -27,7 +92,7 @@ const Home = () => {
     {
       title: 'Active Tenants',
       value: homevalues.tenants_count || '0',
-      change: `${(((homevalues.tenants_count - homevalues.tenants_prev) / homevalues.tenants_prev) * 100).toFixed(0)}%`,
+      change: homevalues.tenants_prev>0?`${(((homevalues.tenants_count - homevalues.tenants_prev) / homevalues.tenants_prev) * 100).toFixed(0)}%`:'',
       trend: homevalues.tenants_count >= homevalues.tenants_prev ? 'up' : 'down',
       icon: Users,
       color: 'bg-green-500'
@@ -35,7 +100,7 @@ const Home = () => {
     {
       title: 'Monthly Revenue',
       value: `৳${Math.round(homevalues.revenue) || '0'}`,
-      change: `${(((homevalues.revenue - homevalues.prev_revenue) / homevalues.prev_revenue) * 100).toFixed(0)}%`,
+      change: homevalues.prev_revenue>0?`${(((homevalues.revenue - homevalues.prev_revenue) / homevalues.prev_revenue) * 100).toFixed(0)}%`:'',
       trend: homevalues.tenants_count >= homevalues.tenants_prev ? 'up' : 'down',
       icon: DollarSign,
       color: 'bg-purple-500'
@@ -54,7 +119,7 @@ const Home = () => {
   useEffect(() => {
     const fetchRecentActivities = async () => {
       try {
-        const response = await fetch('http://localhost/qadersheavennew/php/getRecentActivities.php', {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/getRecentActivities.php`, {
           method: 'GET',
           credentials: 'include'
         })
@@ -93,7 +158,7 @@ const Home = () => {
   }
 
 useEffect(()=>{
-      fetch('http://localhost/qadersheavennew/php/getHomevalues.php',{
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/getHomevalues.php`,{
         method: 'GET',
         credentials: 'include'
       })
@@ -221,6 +286,97 @@ useEffect(()=>{
 
       {/* Tutorial Guide */}
       <TutorialGuide isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
+      
+      {/* AI Chatbot */}
+      {/* Floating Chat Head */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button
+          onClick={() => setIsChatOpen(!isChatOpen)}
+          className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition-all duration-300 hover:scale-110"
+        >
+          <MessageCircle className="w-6 h-6" />
+        </button>
+      </div>
+      
+      {/* Chat Box */}
+      {isChatOpen && (
+        <div className="fixed bottom-20 right-6 w-96 h-[400px] bg-white rounded-lg shadow-2xl z-50 flex flex-col">
+          {/* Chat Header */}
+          <div className="bg-blue-600 text-white p-4 rounded-t-lg flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <MessageCircle className="w-5 h-5" />
+              <h3 className="font-semibold">Property Heaven AI Assistant</h3>
+            </div>
+            <button
+              onClick={() => setIsChatOpen(false)}
+              className="text-white hover:bg-blue-700 rounded p-1 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          {/* Chat Messages */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {messages.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                <MessageCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p>Hello! I'm your AI assistant.</p>
+                <p className="text-sm mt-1">Ask me anything about your properties!</p>
+              </div>
+            ) : (
+              messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[80%] p-3 rounded-lg ${
+                      message.type === 'user'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                  </div>
+                </div>
+              ))
+            )}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-gray-100 text-gray-800 p-3 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Chat Input */}
+          <div className="border-t p-4">
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                value={currentMessage}
+                onChange={(e) => setCurrentMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Ask about your properties..."
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isLoading}
+              />
+              <button
+                onClick={handleSendMessage}
+                disabled={isLoading || !currentMessage.trim()}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white p-2 rounded-lg transition-colors"
+              >
+                <Send className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

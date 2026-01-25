@@ -61,7 +61,7 @@ const TenantsDetails = () => {
 
   
   useEffect(()=>{
-    fetch('http://localhost/qadersheavennew/php/gettenants.php',{
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/gettenants.php`,{
       method: 'GET',
       credentials: 'include'
     })
@@ -92,7 +92,7 @@ const TenantsDetails = () => {
 
   useEffect(()=>{
 
-    fetch('http://localhost/qadersheavennew/php/getunits.php')
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/getunits.php`)
       .then((res)=>res.json())
       .then((data)=>{
         if(data && data.length>0){
@@ -145,7 +145,7 @@ const TenantsDetails = () => {
     console.log(name)
 
     try{  
-      const response=await axios.post('http://localhost/qadersheavennew/php/tenant.php', {
+      const response=await axios.post(`${import.meta.env.VITE_API_BASE_URL}/tenant.php`, {
       unitid,
       name,
       nid_num,
@@ -181,7 +181,7 @@ const TenantsDetails = () => {
     setpopup(false)
     console.log(id)
     try{
-      const response = await axios.post('http://localhost/qadersheavennew/php/deletetenant.php', { id:id.id, status:id.status }, { withCredentials: true })
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/deletetenant.php`, { id:id.id, status:id.status }, { withCredentials: true })
       console.log(response.data)
       if(response.data.success){
         setrefresh(!refresh)
@@ -197,7 +197,7 @@ const TenantsDetails = () => {
     console.log(editing.field)
     console.log(name)
     try{
-      const response = await axios.post('http://localhost/qadersheavennew/php/updatetenant.php', { 
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/updatetenant.php`, { 
         unit_id: editing.id,
         field: editing.field,
         value: editing.field === 'base_rent' ? baseRent : name
@@ -242,7 +242,7 @@ const TenantsDetails = () => {
     }
     console.log(selectedTenant)
     try {
-      const response = await axios.post('http://localhost/qadersheavennew/php/createtenantportal.php', {
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/createtenantportal.php`, {
         tenant_id: selectedTenant.tenant_id,
         tenant_name: selectedTenant.name,
         email: portalForm.email,

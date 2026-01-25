@@ -79,7 +79,7 @@ const AccountSettings = ({ userType = 'admin' }) => {
     setMessage('')
 
     try {
-      const response = await axios.post('http://localhost/qadersheavennew/php/updateAccount.php', {
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/updateAccount.php`, {
         current_password: formData.current_password,
         new_email: formData.new_email,
         new_password: formData.new_password,

@@ -40,7 +40,7 @@ const TenantsBillGenerate = () => {
     }
   }, [])
  useEffect(()=>{
-  fetch('http://localhost/qadersheavennew/php/getunits.php')
+  fetch(`${import.meta.env.VITE_API_BASE_URL}/getunits.php`)
   .then((res)=>res.json())
   .then((data)=>{
     setUnits(data||[])
@@ -49,7 +49,7 @@ const TenantsBillGenerate = () => {
  },[])
 
  useEffect(()=>{
-  fetch('http://localhost/qadersheavennew/php/fetchproperty.php')
+  fetch(`${import.meta.env.VITE_API_BASE_URL}/fetchproperty.php`)
   .then((res)=>res.json())
   .then((data)=>{
     setProperty(data?.success ? data.data : [])
@@ -62,7 +62,7 @@ const TenantsBillGenerate = () => {
     
     console.log(name)
    try{
-    const response=await axios.post('http://localhost/qadersheavennew/php/billgenerate.php', {
+    const response=await axios.post(`${import.meta.env.VITE_API_BASE_URL}/billgenerate.php`, {
       selectedUnit,
       startperiod,
       endperiod,
@@ -92,7 +92,7 @@ const handleGenerateMonthlyBills = async () => {
   console.log(monthlyBillsForm)
   
   try {
-    const response = await axios.post('http://localhost/qadersheavennew/php/generatemonthlybills.php', {
+    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/generatemonthlybills.php`, {
       startperiod: monthlyBillsForm.startperiod,
       endperiod: monthlyBillsForm.endperiod
     }, { withCredentials: true });
@@ -285,11 +285,27 @@ const handleGenerateMonthlyBills = async () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">Fiscal Period</label>
           <div className="flex space-x-4"> 
           <div> 
-            <input type="date" value={startperiod} onChange={(e)=>setStartperiod(e.target.value)} className="input-field" required/>
+            <input type="date" value={startperiod} 
+            onChange={(e) => {
+            const newStart = e.target.value;
+            let newEnd = endperiod;
+
+            // If the new start date is ahead of the current end date, reset end date
+            if (newEnd && newStart > newEnd) {
+              newEnd = ''; // or set it to newStart
+            }
+
+            setEndperiod(newEnd);
+            setStartperiod(newStart);
+            }}
+            className="input-field" required/>
+          
           </div>
            <p className='mx-4'>to</p>
           <div>
-            <input type="date" value={endperiod} onChange={(e)=>setEndperiod(e.target.value)} className="input-field" required/>
+            <input type="date" value={endperiod} 
+             min={startperiod}
+             onChange={(e)=>setEndperiod(e.target.value)} className="input-field" required/>
           </div>
           </div> 
           </div> 
@@ -402,7 +418,7 @@ const handleGenerateMonthlyBills = async () => {
           
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
             <p className="text-amber-800 text-sm font-medium text-center">
-              ⚠️ Warning! Bills will be generated based on base rent and all bill status will become unpaid.
+              ⚠️ Warning! Bills will be generated based on base rent and all bill status will be set to unpaid.
             </p>
           </div>
 
@@ -412,7 +428,21 @@ const handleGenerateMonthlyBills = async () => {
               <input
                 type="date"
                 value={monthlyBillsForm.startperiod}
-                onChange={(e) => setMonthlyBillsForm({...monthlyBillsForm, startperiod: e.target.value})}
+                onChange={(e) => {
+                 const newStart = e.target.value;
+                 let newEnd = monthlyBillsForm.endperiod;
+
+                 // If the new start date is ahead of the current end date, reset end date
+                 if (newEnd && newStart > newEnd) {
+                   newEnd = ''; // or set it to newStart
+                 }
+
+                 setMonthlyBillsForm({
+                    ...monthlyBillsForm, 
+                    startperiod: newStart, 
+                    endperiod: newEnd 
+                 });
+                }}
                 className="input-field w-full"
                 required
               />
@@ -423,6 +453,7 @@ const handleGenerateMonthlyBills = async () => {
               <input
                 type="date"
                 value={monthlyBillsForm.endperiod}
+                min={monthlyBillsForm.startperiod}
                 onChange={(e) => setMonthlyBillsForm({...monthlyBillsForm, endperiod: e.target.value})}
                 className="input-field w-full"
                 required

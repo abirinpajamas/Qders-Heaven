@@ -12,6 +12,7 @@ const Report = () => {
   const [summary, setSummary] = useState(null)
   const [pdfUrl, setPdfUrl] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [paymentsum, setPaymentsum] = useState(null)
 
   // Load jsPDF UMD from CDN once (reuse pattern from TenantsBillGenerate)
   useEffect(() => {
@@ -36,17 +37,21 @@ const Report = () => {
     setLoading(true)
     try {
       const [repRes, unitsRes, tenantsRes] = await Promise.all([
-        axios.post('http://localhost/qadersheavennew/php/getreports.php', { start, end }, { withCredentials: true }),
-        fetch('http://localhost/qadersheavennew/php/getunits.php', { withCredentials: true }).then(r => r.json()),
-        fetch('http://localhost/qadersheavennew/php/gettenants.php', { withCredentials: true }).then(r => r.json())
+        axios.post(`${import.meta.env.VITE_API_BASE_URL}/getreports.php`, { start, end }, { withCredentials: true }),
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/getunits.php`, { withCredentials: true }).then(r => r.json()),
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/gettenants.php`, { withCredentials: true }).then(r => r.json())
       ])
       const rows = repRes.data?.data || []
+      console.log('bills:',rows)
       setBills(rows)
+      const paymentsum=repRes.data?.paymentsum || 0
+      console.log('paymentsum:',repRes.data?.paymentsum)
+      console.log('paymentsum:',paymentsum)
       setUnits(unitsRes || [])
       console.log('tenants:',tenantsRes)
       setTenants(tenantsRes.tenants || [])
       console.log('Report Data:', tenantsRes.tenants)
-      computeSummary(rows, unitsRes || [], tenantsRes.tenants || [])
+      computeSummary(rows,paymentsum, unitsRes || [], tenantsRes.tenants || [])
     } catch (e) {
       console.error(e)
     } finally {
@@ -56,8 +61,8 @@ const Report = () => {
 
   const sum = (arr, sel) => arr.reduce((acc, x) => acc + (Number(sel(x)) || 0), 0)
 
-  const computeSummary = (billsData, allUnits, allTenants) => {
-    const paidAmount = sum(billsData.filter(b => canonicalizeStatus(b.status) === 'Paid'), b => b.amount)
+  const computeSummary = (billsData, paymentsum, allUnits, allTenants) => {
+    const paidAmount = paymentsum
     const totalBilled = sum(billsData, b => b.amount)
     const outstanding = totalBilled - paidAmount
     const collectionRate = totalBilled ? (paidAmount / totalBilled) : 0
@@ -115,7 +120,7 @@ const Report = () => {
       if (summary) {
         doc.text(`Total Billed: BDT ${Number(summary.totalBilled).toLocaleString()}`, 10, y); y += 8
         doc.text(`Collected (Paid): BDT ${Number(summary.paidAmount).toLocaleString()}`, 10, y); y += 8
-        doc.text(`Outstanding: BDT ${Number(summary.outstanding).toLocaleString()}`, 10, y); y += 8
+        doc.text((Number(summary.outstanding)<0?'Surplus':'Outstanding')+`: BDT ${Math.abs(Number(summary.outstanding)).toLocaleString()}`, 10, y); y += 8
         doc.text(`Collection Rate: ${(summary.collectionRate*100).toFixed(1)}%`, 10, y); y += 8
         doc.text(`Occupancy: ${summary.occupied}/${summary.totalUnits} (${(summary.occupancyRate*100).toFixed(1)}%)`, 10, y); y += 8
         const sc = summary.statusCounts || {}
@@ -215,8 +220,8 @@ const Report = () => {
             <h3 className="text-2xl font-bold">৳{Number(summary.paidAmount).toLocaleString()}</h3>
           </div>
           <div className="card">
-            <p className="text-gray-500 text-sm">Outstanding</p>
-            <h3 className="text-2xl font-bold">৳{Number(summary.outstanding).toLocaleString()}</h3>
+            <p className="text-gray-500 text-sm">{Number(summary.outstanding)<0?'Surplus':'Outstanding'}</p>
+            <h3 className="text-2xl font-bold">৳{Math.abs(Number(summary.outstanding)).toLocaleString()}</h3>
           </div>
           <div className="card">
             <p className="text-gray-500 text-sm">Collection Rate</p>

@@ -17,7 +17,7 @@ const AdminPortal = () => {
 
   useEffect(() => {
     // Check if admin is already logged in via session
-    fetch('http://localhost/qadersheavennew/php/checkSession.php', { 
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/checkSession.php`, { 
       credentials: 'include' 
     })
       .then(res => res.json())
@@ -50,7 +50,7 @@ const AdminPortal = () => {
       
       // IMPORTANT: Add credentials: 'include' to send/receive cookies
       const response = await axios.post(
-        `http://localhost/qadersheavennew/php/${endpoint}.php`, 
+        `${import.meta.env.VITE_API_BASE_URL}/${endpoint}.php`, 
         payload,
         { withCredentials: true } // This enables session cookies
       )

@@ -40,10 +40,13 @@ try {
     $check_stmt->execute();
     $check_result = $check_stmt->get_result();
     
-    if ($check_result->num_rows > 0) {
-        $response["message"] = "Cannot delete bill: It has associated payments";
-    } else {
+    
         // Delete the bill
+        $delete_payment="DELETE FROM payments WHERE rentbill_id = ?";
+        $delete_payment_stmt = $conn->prepare($delete_payment);
+        $delete_payment_stmt->bind_param("i", $bill_id);
+        $delete_payment_stmt->execute();
+        $delete_payment_stmt->close();
         $delete_sql = "DELETE FROM bills WHERE bill_id = ?";
         $delete_stmt = $conn->prepare($delete_sql);
         $delete_stmt->bind_param("i", $bill_id);
@@ -55,7 +58,7 @@ try {
             $response["message"] = "Failed to delete bill";
         }
         $delete_stmt->close();
-    }
+    
     $check_stmt->close();
     
 } catch (Exception $e) {

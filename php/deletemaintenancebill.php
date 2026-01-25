@@ -40,13 +40,16 @@ try {
     $check_stmt->execute();
     $check_result = $check_stmt->get_result();
     
-    if ($check_result->num_rows > 0) {
-        $response["message"] = "Cannot delete bill: It has associated payments";
-    } else {
+   
         // Delete the maintenance bill
+
+        $delete_sql2 = "DELETE FROM payments WHERE servbill_id = ?";
         $delete_sql = "DELETE FROM servbills WHERE bill_id = ?";
+        $delete_stmt2 = $conn->prepare($delete_sql2);
+        $delete_stmt2->bind_param("i", $bill_id);
         $delete_stmt = $conn->prepare($delete_sql);
         $delete_stmt->bind_param("i", $bill_id);
+
         
         if ($delete_stmt->execute()) {
             $response["success"] = true;
@@ -55,7 +58,7 @@ try {
             $response["message"] = "Failed to delete maintenance bill";
         }
         $delete_stmt->close();
-    }
+        $delete_stmt2->close();    
     $check_stmt->close();
     
 } catch (Exception $e) {

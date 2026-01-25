@@ -48,7 +48,7 @@ if ($tenant_result) {
             'type' => 'tenant_registered',
             'action' => 'New tenant registered',
             'details' => $row['tenant_name'],
-            'property' => $row['property_name'] . ' - Unit ' . ($row['unit_number'] || 'N/A'),
+            'property' => $row['property_name'] . ' - Unit ' . ($row['unit_number'] ?? 'N/A'),
             'time' => time_ago($row['created_at']),
             'timestamp' => $row['created_at']
         ];
@@ -78,7 +78,7 @@ if ($payment_result) {
             'type' => 'payment_received',
             'action' => 'Payment received',
             'details' => '৳' . number_format($row['amount']) . ' via ' . ucfirst($row['payment_method']),
-            'property' => $row['property_name'] . ' - Unit ' . ($row['unit_number'] || 'N/A'),
+            'property' => $row['property_name'] . ' - Unit ' . ($row['unit_number'] ?? 'N/A'),
             'time' => time_ago($row['paid_on']),
             'timestamp' => $row['paid_on']
         ];
@@ -108,7 +108,7 @@ if ($bill_result) {
             'type' => 'bill_generated',
             'action' => 'Bill generated',
             'details' => '৳' . number_format($row['amount']) . ' for ' . date('M Y', strtotime($row['period_start'])),
-            'property' => $row['property_name'] . ' - Unit ' . ($row['unit_number'] || 'N/A'),
+            'property' => $row['property_name'] . ' - Unit ' . ($row['unit_number'] ?? 'N/A'),
             'time' => time_ago($row['created_at']),
             'timestamp' => $row['created_at']
         ];

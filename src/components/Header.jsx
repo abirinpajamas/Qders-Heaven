@@ -33,7 +33,7 @@ const Header = ({ toggleSidebar }) => {
 
  const handleLogout =async () => {
     try{
-     const res=await fetch('http://localhost/qadersheavennew/php/logout.php',
+     const res=await fetch(`${import.meta.env.VITE_API_BASE_URL}/logout.php`,
      {method: 'GET',
      credentials: 'include'
      })

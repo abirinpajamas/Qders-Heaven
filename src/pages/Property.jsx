@@ -34,7 +34,7 @@ const Property = () => {
   }, [location]);
 
    useEffect(()=>{
-      fetch('http://localhost/qadersheavennew/php/fetchproperty.php')
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/fetchproperty.php`)
       .then((res)=>res.json())
       .then((data)=>{
         setpropertydata(data?.success ? data.data : [])
@@ -54,7 +54,7 @@ const Property = () => {
     setprov(false)
     console.log(name)
    try{
-    const response=await axios.post('http://localhost/qadersheavennew/php/property.php', {
+    const response=await axios.post(`${import.meta.env.VITE_API_BASE_URL}/property.php`, {
       name,
       total_floors,
       address,
@@ -74,7 +74,7 @@ const Property = () => {
   const handledelete = async (id) => {
     setpopup(false)
     try{
-      const response = await axios.post('http://localhost/qadersheavennew/php/deleteproperty.php', { id }, { withCredentials: true })
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/deleteproperty.php`, { id }, { withCredentials: true })
       console.log(response.data)
       setstate(!state)
     } catch(err){

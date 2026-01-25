@@ -15,7 +15,7 @@ const TenantPortal = () => {
 
   useEffect(() => {
     setLoading(true)
-    fetch('http://localhost/qadersheavennew/php/getTenantDashboard.php', {
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/getTenantDashboard.php`, {
       method: 'GET',
       credentials: 'include'
     })
@@ -35,7 +35,7 @@ const TenantPortal = () => {
   // Fetch tenant bills
   useEffect(() => {
     setBillsLoading(true)
-    fetch('http://localhost/qadersheavennew/php/getTenantBills.php', {
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/getTenantBills.php`, {
       method: 'GET',
       credentials: 'include'
     })
@@ -55,7 +55,7 @@ const TenantPortal = () => {
   // Fetch tenant payments
   useEffect(() => {
     setPaymentsLoading(true)
-    fetch('http://localhost/qadersheavennew/php/getTenantPayments.php', {
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/getTenantPayments.php`, {
       method: 'GET',
       credentials: 'include'
     })

@@ -6,7 +6,7 @@ const TenantLayout = ({ children }) => {
   
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://localhost/qadersheavennew/php/logout.php', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/logout.php`, {
         method: 'POST',
         credentials: 'include'
       })

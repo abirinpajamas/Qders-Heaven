@@ -30,7 +30,7 @@ const ServiceProviderContact = () => {
     setprov(false)
     console.log(name)
     try{
-     const response=await axios.post('http://localhost/qadersheavennew/php/servprovide.php', {
+     const response=await axios.post(`${import.meta.env.VITE_API_BASE_URL}/servprovide.php`, {
         name,
         category,
         phone,
@@ -49,7 +49,7 @@ const ServiceProviderContact = () => {
   }
 
   useEffect(()=>{
-   fetch('http://localhost/qadersheavennew/php/getserviceprovider.php')
+   fetch(`${import.meta.env.VITE_API_BASE_URL}/getserviceprovider.php`)
     .then((res)=>res.json())
     .then((data)=>{
       console.log(data)
@@ -64,7 +64,7 @@ const ServiceProviderContact = () => {
     console.log(id)
     setpopup(false)
     try{
-      const response=await axios.post('http://localhost/qadersheavennew/php/deleteservprovider.php', {
+      const response=await axios.post(`${import.meta.env.VITE_API_BASE_URL}/deleteservprovider.php`, {
         id
       }, { withCredentials: true })
       console.log(response.data.success)

@@ -59,15 +59,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
           LEFT JOIN tenants t ON t.unit_id = u.unit_id
           WHERE b.period_start >= ? AND b.period_end <= ?";
 
+  
   $stmt = $conn->prepare($sql);
   $stmt->bind_param("ss", $start, $end);
+  $paymentcount="SELECT sum(amount) AS paymentcount FROM payments WHERE paid_on between ? AND ? And servbill_id is NULL";        
+  $stmt1 = $conn->prepare($paymentcount);
+  $stmt1->bind_param("ss", $start, $end);
+  $stmt1->execute();
+  $result1 = $stmt1->get_result();
+  $row = $result1->fetch_assoc(); 
+  $paymentcount = $row['paymentcount'];
+  $stmt1->close();
   if (!$stmt->execute()) {
     echo json_encode(["success" => false, "message" => "Query failed", "error" => $stmt->error]);
     exit();
   }
   $result = $stmt->get_result();
   $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
-  echo json_encode(["success" => true, "data" => $rows]);
+  echo json_encode(["success" => true, "data" => $rows,"paymentsum" => $paymentcount]);
   $stmt->close();
   $conn->close();
   exit();

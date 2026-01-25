@@ -33,7 +33,7 @@ function App() {
 
   useEffect(() => {
     // Check session once on mount
-    fetch('http://localhost/qadersheavennew/php/checkSession.php', { 
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/checkSession.php`, { 
       credentials: 'include' 
     })
       .then(res => {

@@ -11,7 +11,7 @@ const PropertyStatus = () => {
   
 
   useEffect(()=>{
-    fetch('http://localhost/qadersheavennew/php/getpropertystatus.php')
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/getpropertystatus.php`)
     .then((res)=>res.json())
     .then((data)=>{
       setStatusdata(data.details||[])
