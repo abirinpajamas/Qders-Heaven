@@ -26,3 +26,5 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/ # Use ./build/ if you are using Create React App
           server-dir: ./public_html/
+          protocol: ftp # Try 'ftp' first, then 'ftps' if it fails
+          port: 21
