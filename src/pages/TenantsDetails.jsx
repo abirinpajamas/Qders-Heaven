@@ -2,6 +2,7 @@ import { UserCheck,MapPin,Mail, Phone, UserPlus,User, Plus, Eye, Edit, Trash2, U
 import { useState,useEffect } from 'react'
 import axios from 'axios'
 import { Link } from 'react-router-dom'
+import AnimatedCard from '../components/AnimatedCard'
 
 const TenantsDetails = () => {
 
@@ -333,6 +334,7 @@ const TenantsDetails = () => {
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredTenants.map((tenant) => (
+          <AnimatedCard>
           <div key={tenant.tenant_id} className="card hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between mb-4">
               <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
@@ -456,6 +458,7 @@ const TenantsDetails = () => {
               </div>
             </div>
           </div>
+          </AnimatedCard>
         ))}
       </div>
     </div>
