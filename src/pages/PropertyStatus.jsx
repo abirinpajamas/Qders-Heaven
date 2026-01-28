@@ -1,5 +1,6 @@
 import { CheckSquare, Building2, DoorOpen } from 'lucide-react'
 import { useState,useEffect } from 'react'
+import AnimatedCard from '../components/AnimatedCard'
 
 const PropertyStatus = () => {
 
@@ -52,7 +53,7 @@ const PropertyStatus = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {statusdata.map((property) => (
 
-          
+         <AnimatedCard> 
           <div key={property.property_id} className="card">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-3">
@@ -94,6 +95,7 @@ const PropertyStatus = () => {
               </div>
             </div>
           </div>
+          </AnimatedCard>
         ))}
       </div>
 

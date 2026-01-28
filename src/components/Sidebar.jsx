@@ -172,7 +172,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         </div>
 
         {/* Navigation Menu */}
-        <nav className="mt-4 overflow-y-auto h-[calc(100vh-4rem)] pb-4">
+        <nav className="mt-4 overflow-y-auto h-[calc(100vh-5rem)] pb-10 scrollbar-hide">
           <ul className="space-y-1 px-3">
             {renderMenuItems(menuItems)}
           </ul>

@@ -117,7 +117,7 @@ const AdminManagement = () => {
   }
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen w-full overflow-x-hidden">
       {/* Add Admin Modal */}
       {showAddAdmin && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
@@ -290,8 +290,8 @@ const AdminManagement = () => {
         </div>
       )}
 
-      <div className="space-y-6 px-4 md:px-0">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="w-full max-w-full px-4 py-6 md:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-gray-800">Admin Management</h1>
             <p className="text-sm md:text-base text-gray-600 mt-1">Manage system administrators</p>
@@ -310,41 +310,41 @@ const AdminManagement = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {userdata.map((admin) => (
-            <AnimatedCard>
-            <div key={admin.user_id} className="card hover:shadow-lg transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-lg sm:text-2xl font-bold text-primary-600">{admin.fname.charAt(0)}</span>
+            <AnimatedCard key={admin.user_id}>
+              <div className="card hover:shadow-lg transition-shadow w-full">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-lg sm:text-2xl font-bold text-primary-600">{admin.fname.charAt(0)}</span>
+                  </div>
+                  <span className="px-2 sm:px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium whitespace-nowrap">
+                    {admin.user_type}
+                  </span>
                 </div>
-                <span className="px-2 sm:px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                  {admin.user_type}
-                </span>
-              </div>
-              <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-1 break-words">{admin.fname} {admin.lname}</h3>
-              <p className="text-xs sm:text-sm text-primary-600 font-medium mb-3 sm:mb-4">{admin.user_type}</p>
-              <div className="space-y-2 mb-3 sm:mb-4">
-                <div className="flex items-center text-xs sm:text-sm text-gray-600 break-all">
-                  <Mail className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
-                  <span className="truncate">{admin.email}</span>
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-1 break-words">{admin.fname} {admin.lname}</h3>
+                <p className="text-xs sm:text-sm text-primary-600 font-medium mb-3 sm:mb-4">{admin.user_type}</p>
+                <div className="space-y-2 mb-3 sm:mb-4">
+                  <div className="flex items-center text-xs sm:text-sm text-gray-600 break-all">
+                    <Mail className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{admin.email}</span>
+                  </div>
+                  <div className="text-xs sm:text-sm text-gray-600">
+                    <p className="truncate">Account Created: {admin.created_at}</p>
+                  </div>
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600">
-                  <p>Account Created: {admin.created_at}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button className="flex-1 btn-icon bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm sm:text-base">
-                  <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
-                </button>
-                {role === 'super admin' && (
-                  <button 
-                    className="flex-1 btn-icon bg-red-100 hover:bg-red-200 text-red-700 text-sm sm:text-base" 
-                    onClick={() => { setpopup(true); setselectedId(admin.user_id); }}
-                  >
-                    <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                <div className="flex items-center gap-2">
+                  <button className="flex-1 btn-icon bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm sm:text-base py-2">
+                    <Edit className="w-3 h-3 sm:w-4 sm:h-4 mx-auto" />
                   </button>
-                )}
+                  {role === 'super admin' && (
+                    <button 
+                      className="flex-1 btn-icon bg-red-100 hover:bg-red-200 text-red-700 text-sm sm:text-base py-2" 
+                      onClick={() => { setpopup(true); setselectedId(admin.user_id); }}
+                    >
+                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mx-auto" />
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
             </AnimatedCard>
           ))}
         </div>
@@ -359,18 +359,18 @@ const AdminManagement = () => {
             <p className="text-sm sm:text-base text-gray-700 text-center">
               Are you sure you want to delete this admin? This action cannot be undone.
             </p>
-            <div className="flex justify-between mt-6">
+            <div className="flex justify-between mt-6 gap-3">
               <button
                 type="button"
                 onClick={() => setpopup(false)}
-                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition text-sm sm:text-base"
+                className="flex-1 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition text-sm sm:text-base"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => handledelete(selectedId)}
-                className="px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 shadow-sm transition text-sm sm:text-base"
+                className="flex-1 px-5 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 shadow-sm transition text-sm sm:text-base"
               >
                 Delete
               </button>

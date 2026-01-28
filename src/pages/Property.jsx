@@ -2,6 +2,7 @@ import { Plus, Building2, MapPin, Edit, Trash2, Eye } from 'lucide-react'
 import { useState,useEffect } from 'react'
 import axios from 'axios'
 import { useLocation } from 'react-router-dom';
+import AnimatedCard from '../components/AnimatedCard';
 
 const Property = () => {
 
@@ -98,6 +99,7 @@ const Property = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {propertydata.map((property) => (
+          <AnimatedCard> 
           <div key={property.id} className="card hover:shadow-lg transition-shadow">
             <div className="w-full h-40 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg mb-4 flex items-center justify-center">
               <Building2 className="w-16 h-16 text-white" />
@@ -134,6 +136,7 @@ const Property = () => {
               </div>
             </div>
           </div>
+          </AnimatedCard>
         ))}
       </div>
     </div>

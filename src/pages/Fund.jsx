@@ -62,7 +62,7 @@ const duration = calculateDays(startDate, endDate);
 
   return (
     <div className="space-y-6 px-4 md:px-0">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 ">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-gray-800">Fund Management</h1>
           <p className="text-sm md:text-base text-gray-600 mt-1">Track income and expenses</p>
@@ -90,7 +90,7 @@ const duration = calculateDays(startDate, endDate);
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        <div className="card bg-gradient-to-br from-green-500 to-green-600 text-white">
+        <div className="card bg-gradient-to-br from-green-500 to-green-600 text-white ">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm text-green-100">Total Income</p>
             <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5" />
