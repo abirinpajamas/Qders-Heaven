@@ -300,7 +300,7 @@ useEffect(()=>{
       
       {/* Chat Box */}
       {isChatOpen && (
-        <div className="fixed bottom-20 right-6 w-96 h-[400px] bg-white rounded-lg shadow-2xl z-50 flex flex-col">
+        <div className="fixed bottom-20 right-6 w-auto h-[400px] bg-white rounded-lg shadow-2xl z-50 flex flex-col">
           {/* Chat Header */}
           <div className="bg-blue-600 text-white p-4 rounded-t-lg flex items-center justify-between">
             <div className="flex items-center space-x-2">
