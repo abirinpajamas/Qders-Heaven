@@ -61,7 +61,7 @@ const Header = ({ toggleSidebar }) => {
         >
           <Menu className="w-6 h-6 text-gray-700" />
         </button>
-        <h2 className="text-xl font-semibold text-gray-800">{getPageTitle()}</h2>
+        <h2 className="text-xs sm:text-xl font-semibold text-gray-800">{getPageTitle()}</h2>
       </div>
 
       {/* Right Section */}

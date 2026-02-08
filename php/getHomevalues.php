@@ -31,7 +31,7 @@ if ($conn->connect_error) {
 
 // 1. Define all necessary SQL queries
 $queries = [
-    'tenants_count' => "SELECT COUNT(*) FROM Tenants WHERE status = 'Current';",
+    'tenants_count' => "SELECT COUNT(*) FROM tenants WHERE status = 'Current';",
     'properties_count' => "SELECT COUNT(*) FROM properties;",
     'duebills_count' => "SELECT COUNT(*) FROM bills WHERE status IN ('unpaid','partially paid', 'pending', 'overdue') AND tenant_id is not NULL;",
     
@@ -44,7 +44,7 @@ $queries = [
     // Property Growth
     'properties_prev' => "SELECT COUNT(*) FROM properties WHERE created_at < DATE_FORMAT(CURDATE(), '%Y-%m-01');",
     // Tenant Growth
-    'tenants_prev' => "SELECT COUNT(*) FROM Tenants WHERE created_at < DATE_FORMAT(CURDATE(), '%Y-%m-01');",];
+    'tenants_prev' => "SELECT COUNT(*) FROM tenants WHERE created_at < DATE_FORMAT(CURDATE(), '%Y-%m-01');",];
 
 // Initialize the final response array
 $response_data = [];

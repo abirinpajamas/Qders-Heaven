@@ -224,14 +224,14 @@ const handleGenerateMonthlyBills = async () => {
   return (
     <>
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Tenant's Bill Generate</h1>
-          <p className="text-gray-600 mt-1">Generate bills for tenants</p>
+          <h1 className=" sm:text-2xl font-bold text-gray-800">Tenant's Bill Generate</h1>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">Generate bills for tenants</p>
         </div>
         <button 
           onClick={() => setpopup(true)}
-          className="btn-primary flex items-center space-x-2 hover:bg-blue-700"
+          className="w-40 h-auto sm:w-auto btn-primary flex items-center space-x-2 hover:bg-blue-600"
         >
           <Calendar className="w-5 h-5" />
           <div className="flex flex-col items-end leading-tight">
