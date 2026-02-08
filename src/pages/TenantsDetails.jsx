@@ -84,7 +84,7 @@ const TenantsDetails = () => {
 
   // Filter tenants based on view
   const filteredTenants = tenantdata.filter(tenant => {
-    if (tenantView === 'Current') {
+    if (tenantView === 'Current' && tenant.unit_id) {
       return tenant.Status !== 'Previous';
     } else {
       return tenant.Status === 'Previous';
@@ -406,7 +406,7 @@ const TenantsDetails = () => {
                         autoFocus
                       /> 
                     ) : (
-                      tenant.Status==='Current'?'৳' + (tenant.base_rent ? tenant.base_rent.toLocaleString() : '0'):'৳' + (tenant.unit_history ? tenant.unit_history.toLocaleString() : '0')
+                      tenant.Status==='Current' && !tenant.unit_id?'৳' + (tenant.base_rent ? tenant.base_rent.toLocaleString() : '0'):'৳' + (tenant.unit_history ? tenant.unit_history.toLocaleString() : '0')
                     )}
                   </span>
 
