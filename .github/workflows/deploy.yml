@@ -3,7 +3,7 @@ name: Deploy Website
 on:
   push:
     branches:
-      - main # Triggers every time you push to 'main'
+      - main
 
 jobs:
   web-deploy:
@@ -17,9 +17,9 @@ jobs:
         run: |
           npm install
           npm run build
-          # 1. Create the api folder inside the build output
+          # Create the api folder inside the build output
           mkdir -p ./dist/api
-          # 2. Copy CONTENTS of your local php folder into dist/api
+          # Copy CONTENTS of your local php folder into dist/api
           # Using ./php/. ensures we don't get dist/api/php/ (double folder)
           cp -r ./php/. ./dist/api/
 
@@ -30,13 +30,10 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
-          # 3. Adjust this: Use './public_html/' if your FTP user starts in the root
-          server-dir: ./public_html/
+          # FIXED: Use ./ so it deploys to your current FTP login directory
+          server-dir: ./ 
           protocol: ftp
           port: 21
-          # 4. CRITICAL: Passive mode bypasses GitHub/Hostinger firewalls
           passive: true
-          # 5. Increased timeout for larger uploads
           timeout: 120000
-          # 6. Safety: Ensures it doesn't wipe existing server files not in GitHub
           dangerous-clean-slate: false
