@@ -406,7 +406,7 @@ const TenantsDetails = () => {
                         autoFocus
                       /> 
                     ) : (
-                      tenant.Status==='Current'?'৳' + tenant.base_rent.toLocaleString():'৳' + tenant.unit_history.toLocaleString()
+                      tenant.Status==='Current'?'৳' + (tenant.base_rent ? tenant.base_rent.toLocaleString() : '0'):'৳' + (tenant.unit_history ? tenant.unit_history.toLocaleString() : '0')
                     )}
                   </span>
 
