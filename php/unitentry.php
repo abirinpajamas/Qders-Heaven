@@ -33,16 +33,18 @@ if (!$conn) {
     $unitnum = $data->unitnum;
     $bathroom = $data->bathroom;
     $bedrooms = $data->bedrooms;
-    $meter = $data->meter;
+    $electricmeter = $data->electricmeter;
+    $gasmeter = $data->gasmeter;
+
     $squareFootage = $data->squareFootage;
     $baseRent = $data->baseRent;
     $type = $data->type;
     $status = $data->status;
 
-    $sql = "insert into units (property_id, unit_number, bathrooms, bedrooms, meter, square_Footage, base_Rent, type, status) 
-       values (?,?,?,?,?,?,?,?,?)";
+    $sql = "insert into units (property_id, unit_number, bathrooms, bedrooms, electricmeter, gasmeter, square_Footage, base_Rent, type, status) 
+       values (?,?,?,?,?,?,?,?,?,?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("isiisdiss", $id, $unitnum, $bathroom, $bedrooms, $meter, $squareFootage, $baseRent, $type, $status);
+    $stmt->bind_param("isiissdiss", $id, $unitnum, $bathroom, $bedrooms, $electricmeter, $gasmeter, $squareFootage, $baseRent, $type, $status);
 
     if ($stmt->execute()) {
         $response=["success" => true, "message" => "Input successful"];

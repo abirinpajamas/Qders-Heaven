@@ -2,8 +2,10 @@ import { Plus, DoorOpen, Edit, Trash2, Eye } from 'lucide-react'
 import { useState,useEffect } from 'react'
 import axios from 'axios'
 import { Link } from 'react-router-dom';
-
-
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import {Badge} from '@/components/ui/badge'
+import {Button} from '@/components/ui/button'
+import { hex } from 'framer-motion';
 
 const UnitEntry = () => {
 
@@ -15,7 +17,8 @@ const UnitEntry = () => {
     const [bedrooms,setbedrooms]=useState('')
     const [status,setstatus]=useState('')
     const [type,settype]=useState('')
-    const [meter,setmeter]=useState('')
+    const [electricmeter,setelectricmeter]=useState('')
+    const [gasmeter,setgasmeter]=useState('')
     const [squareFootage,setsquareFootage]=useState('')
     const [baseRent,setbaseRent]=useState('')
     const [unitdata,setunitdata]=useState([])
@@ -23,15 +26,12 @@ const UnitEntry = () => {
     const [popup,setpopup]=useState(false)
     const [selectedId,setselectedId]=useState(null)
     const [propmessage,setpropmessage]=useState('')
+    const [viewinfo,setviewinfo]=useState('')
+    const [editinfo,seteditinfo]=useState('')
+    const [editing,setEditing]=useState([])
+    const [tempValue,setTempValue]=useState('')
 
-  const units = [
-    { id: 1, unitNo: 'Unit 1', property: 'Rangs Qaders Heaven', floor: 'Ground Floor', size: '1200 sqft', bedrooms: 3, status: 'Occupied' },
-    { id: 2, unitNo: 'Unit 2', property: 'Rangs Qaders Heaven', floor: 'Ground Floor', size: '1200 sqft', bedrooms: 3, status: 'Occupied' },
-    { id: 3, unitNo: 'Unit 3', property: 'Rangs Qaders Heaven', floor: '1st Floor', size: '1200 sqft', bedrooms: 3, status: 'Vacant' },
-    { id: 4, unitNo: 'Unit 4', property: 'Rangs Qaders Heaven', floor: '1st Floor', size: '1200 sqft', bedrooms: 3, status: 'Occupied' },
-    { id: 5, unitNo: 'Unit 5', property: 'Rangs Qaders Heaven', floor: '2nd Floor', size: '1200 sqft', bedrooms: 3, status: 'Occupied' },
-  ]
-
+  
   useEffect(()=>{
     fetch(`${import.meta.env.VITE_API_BASE_URL}/fetchproperty.php`)
      .then((res)=>res.json())
@@ -70,7 +70,8 @@ const UnitEntry = () => {
       unitnum,
       bathroom,
       bedrooms,
-      meter,
+      electricmeter,
+      gasmeter,
       squareFootage,
       baseRent,
       type,
@@ -93,6 +94,80 @@ const UnitEntry = () => {
       setstate(!state)
     }catch(err){
       console.error(err)
+    }
+  }
+
+  const Editablefield=({id,field,value,onSave})=>{
+    const isediting=editing.id===id && editing.field===field;
+    
+    if(isediting){
+      return(
+        <input
+           autoFocus
+           className="border-b border-primary-500 outline-none bg-transparent w-full text-gray-800"
+           value={tempValue}
+           onChange={(e)=>setTempValue(e.target.value)}
+           onBlur={() => {
+             if(tempValue.trim() && tempValue !== value){
+               onSave(id, field, tempValue);
+             } else {
+               setEditing({id:null, field:null});
+             }
+           }}
+           onKeyDown={(e) => {
+             if(e.key === 'Enter'){
+               if(tempValue.trim() && tempValue !== value){
+                 onSave(id, field, tempValue);
+               } else {
+                 setEditing({id:null, field:null});
+               }
+             } else if(e.key === 'Escape'){
+               setEditing({id:null, field:null});
+             }
+           }}
+        />
+      )
+    }
+    return (
+      <div className="flex items-center justify-between group">
+        <span 
+          className="cursor-pointer hover:bg-gray-100 px-1 rounded flex-1"
+          onClick={() => {
+            setEditing({id, field});
+            setTempValue(value);
+          }}
+        >
+          {value}
+        </span>
+        <button 
+          className="p-1 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors opacity-0 group-hover:opacity-100"
+          onClick={() => { 
+            setEditing({id, field}); 
+            setTempValue(value); 
+          }}
+        >
+          <Edit className="w-3 h-3" />
+        </button>
+      </div>
+    )
+  }
+
+  const updateunit = async (id, field, value) => {
+    try{
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/updateunit.php`, { 
+        unit_id: id,
+        field: field,
+        value: value
+      }, { withCredentials: true })
+      
+      console.log(response.data)
+      setstate(!state)
+      setEditing({id:null, field:null})
+      setTempValue('')
+    } catch(err){
+      console.error(err)
+      setEditing({id:null, field:null})
+      setTempValue('')
     }
   }
 
@@ -177,11 +252,17 @@ const UnitEntry = () => {
 
                 {/* Actions */}
                 <div className="flex gap-2 pt-2 border-t">
-                  <button className="flex-1 bg-green-100 hover:bg-green-200 text-green-700 px-3 py-2 rounded text-sm font-medium transition flex items-center justify-center gap-1">
+                  <button 
+                    className="flex-1 bg-green-100 hover:bg-green-200 text-green-700 px-3 py-2 rounded text-sm font-medium transition flex items-center justify-center gap-1"
+                    onClick={() => setviewinfo(unit)}
+                  >
                     <Eye className="w-4 h-4" />
                     View
                   </button>
-                  <button className="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded text-sm font-medium transition flex items-center justify-center gap-1">
+                  <button 
+                    className="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded text-sm font-medium transition flex items-center justify-center gap-1"
+                    onClick={() => setviewinfo(unit)}
+                  >
                     <Edit className="w-4 h-4" />
                     Edit
                   </button>
@@ -237,12 +318,11 @@ const UnitEntry = () => {
                   </td>
                   <td className="px-4 lg:px-6 py-4">
                     <div className="flex items-center space-x-2">
-                      <button className="btn-icon bg-green-100 hover:bg-green-200 text-green-700">
+                      <button className="btn-icon bg-green-100 hover:bg-green-200 text-green-700"
+                              onClick={() => setviewinfo(unit)}>
                         <Eye className="w-4 h-4" />
                       </button>
-                      <button className="btn-icon bg-blue-100 hover:bg-blue-200 text-blue-700">
-                        <Edit className="w-4 h-4" />
-                      </button>
+                      
                       <button className="btn-icon bg-red-100 hover:bg-red-200 text-red-700" onClick={() => { setpopup(true); setselectedId(unit.unit_id); }}>
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -262,6 +342,145 @@ const UnitEntry = () => {
         </div>
       </div>
     </div>
+
+    {viewinfo && (
+
+      <Dialog
+        open={!!viewinfo}
+        onOpenChange={() => setviewinfo(null)}
+      >
+       <DialogContent className="sm:md:w-md rounded-2xl"> 
+        
+        <DialogHeader className="relative">
+          <div className="flex items justify-between">
+            <Badge className="bg-white/20 hover:bg-white/30 text-white border-none capitalize"
+                  style={{backgroundColor: viewinfo.status === 'occupied' ? '#055f26ff' : '#9ca3af'}}
+
+            >
+                {viewinfo.status}
+            </Badge>
+          
+          <DialogTitle className="flex items-center">
+            
+            Unit-{viewinfo.unit_number} Information
+          </DialogTitle>
+          <div className="w-[70px] invisible" aria-hidden="true" />
+          </div>
+        </DialogHeader>
+        
+           
+         <div className="p-6 space-y-6">
+        {/* Primary Details Grid */}
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="bg-gray-100 p-3 rounded-xl">
+            <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Rent</p>
+            <p className="text-lg font-semibold text-gray-800">
+              <Editablefield 
+                id={viewinfo.unit_id} 
+                field="base_rent" 
+                value={viewinfo.base_rent} 
+                onSave={updateunit}
+              />
+            </p>
+          </div>
+          <div className="bg-gray-100 p-3 rounded-xl">
+            <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Beds</p>
+            <p className="text-lg font-semibold text-gray-800">
+              <Editablefield 
+                id={viewinfo.unit_id} 
+                field="bedrooms" 
+                value={viewinfo.bedrooms} 
+                onSave={updateunit}
+              />
+            </p>
+          </div>
+          <div className="bg-gray-100 p-3 rounded-xl">
+            <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Baths</p>
+            <p className="text-lg font-semibold text-gray-800">
+              <Editablefield 
+                id={viewinfo.unit_id} 
+                field="bathrooms" 
+                value={viewinfo.bathrooms} 
+                onSave={updateunit}
+              />
+            </p>
+          </div>
+        </div>
+
+        {/* Property & Tenant Info */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Occupancy Details</h3>
+          <div className="grid grid-cols-2 gap-y-3 border-t pt-3">
+            <div>
+              <p className="text-xs text-gray-500">Tenant Name</p>
+              <p className="text-sm font-medium text-gray-700">{viewinfo.tenantname || "N/A"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Tenant ID</p>
+              <p className="text-sm font-medium text-gray-700">#{viewinfo.tenant_id}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Size</p>
+              <p className="text-sm font-medium text-gray-800">
+                <Editablefield 
+                  id={viewinfo.unit_id} 
+                  field="square_footage" 
+                  value={viewinfo.square_footage} 
+                  onSave={updateunit}
+                />
+                sqft
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Unit Type</p>
+              <p className="text-sm font-medium text-gray-800">
+                <Editablefield 
+                  id={viewinfo.unit_id} 
+                  field="type" 
+                  value={viewinfo.type} 
+                  onSave={updateunit}
+                />
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Technical Info */}
+        <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+           <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-blue-600 font-semibold">Electric Meter</p>
+                <p className="text-sm text-gray-800">
+                  <Editablefield 
+                    id={viewinfo.unit_id} 
+                    field="electricmeter" 
+                    value={viewinfo.electricmeter || ""} 
+                    onSave={updateunit}
+                  />
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-blue-600 font-semibold">Gas Meter</p>
+                <p className="text-sm text-gray-800">
+                  <Editablefield 
+                    id={viewinfo.unit_id} 
+                    field="gasmeter" 
+                    value={viewinfo.gasmeter || ""} 
+                    onSave={updateunit}
+                  />
+                </p>
+              </div>
+           </div>
+        </div>
+
+        <div className="flex justify-between items-center pt-2 text-[10px] text-gray-600 italic">
+          <span>Added: {new Date(viewinfo.created_at).toLocaleDateString()}</span>
+        </div>
+       </div>
+       
+       </DialogContent>
+      </Dialog>
+    )}
 
     {popup && (
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50 p-4">
@@ -338,7 +557,19 @@ const UnitEntry = () => {
           </div>
 
           {/* Bedrooms & Bathrooms */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Square Footage
+              </label>
+              <input
+                type="text"
+                value={squareFootage}
+                onChange={(e) => setsquareFootage(e.target.value)}
+                className="w-full border border-sky-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                placeholder="1200"
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Bedrooms
@@ -370,29 +601,29 @@ const UnitEntry = () => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Meter
+                Electric Meter
               </label>
               <input
                 type="text"
-                value={meter}
-                onChange={(e) => setmeter(e.target.value)}
+                value={electricmeter}
+                onChange={(e) => setelectricmeter(e.target.value)}
+                className="w-full border border-sky-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                placeholder="11222854"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Gas Meter
+              </label>
+              <input
+                type="text"
+                onChange={(e) => setgasmeter(e.target.value)}
                 className="w-full border border-sky-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none"
                 placeholder="11222854"
               />
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Square Footage
-              </label>
-              <input
-                type="text"
-                value={squareFootage}
-                onChange={(e) => setsquareFootage(e.target.value)}
-                className="w-full border border-sky-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none"
-                placeholder="1200"
-              />
-            </div>
+            
           </div>
 
           {/* Base Rent & Type */}

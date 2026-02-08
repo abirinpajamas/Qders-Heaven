@@ -1,8 +1,9 @@
-import { Plus, Building2, MapPin, Edit, Trash2, Eye } from 'lucide-react'
+import { Check, ChevronDown, Plus, Building2, MapPin, Edit, Trash2, Eye } from 'lucide-react'
 import { useState,useEffect } from 'react'
 import axios from 'axios'
 import { useLocation } from 'react-router-dom';
 import AnimatedCard from '../components/AnimatedCard';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
 const Property = () => {
 
@@ -19,7 +20,9 @@ const Property = () => {
     const [propertydata,setpropertydata]=useState([])
     const [popup,setpopup]=useState(false)
     const [selectedId,setselectedId]=useState(null)
-    const location = useLocation();
+    const [editing,setEditing]=useState({})
+    const [tempValue,setTempValue]=useState('')
+    
 
   const properties = [
     { id: 1, name: 'Rangs Qaders Heaven', address: 'Mirpur, Dhaka', floors: 5, units: 20, status: 'Active' },
@@ -82,6 +85,120 @@ const Property = () => {
       console.error(err)
     }
   }
+  const Editablefield=({id,field,value,onSave})=>{
+    const isediting=editing.id===id && editing.field===field;
+    
+    if(isediting){
+      return(
+        field=='status'?(
+         <Select
+          defaultValue={value}
+          onValueChange={(newValue) => {
+              onSave(id, field, newValue);
+          }}
+         >
+          <SelectTrigger 
+           className="w-[120px] h-8 rounded-full border-primary-500 bg-transparent focus:ring-1 focus:ring-primary-400"
+          >
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+      
+          <SelectContent className="rounded-xl border-gray-100 shadow-lg">
+          <SelectItem 
+            value="active" 
+            className="cursor-pointer focus:bg-primary-50 focus:text-primary-700 rounded-md"
+          >
+            <span className="flex items-center">
+            <span className="w-2 h-2 rounded-full bg-green-500 mr-2" />
+            Active
+            </span>
+          </SelectItem>
+        
+          <SelectItem 
+            value="inactive" 
+            className="cursor-pointer focus:bg-red-50 focus:text-red-700 rounded-md"
+          >
+            <span className="flex items-center">
+            <span className="w-2 h-2 rounded-full bg-gray-400 mr-2" />
+            Inactive
+            </span>
+          </SelectItem>
+        </SelectContent>
+      </Select>
+        ):(
+        <input
+           autoFocus
+           className="border-b border-primary-500 outline-none bg-transparent w-full text-gray-800"
+           value={tempValue}
+           onChange={(e)=>setTempValue(e.target.value)}
+           onBlur={() => {
+             if(tempValue.trim() && tempValue !== value){
+               onSave(id, field, tempValue);
+             } else {
+               setEditing({id:null, field:null});
+             }
+           }}
+           onKeyDown={(e) => {
+             if(e.key === 'Enter'){
+               if(tempValue.trim() && tempValue !== value){
+                 onSave(id, field, tempValue);
+               } else {
+                 setEditing({id:null, field:null});
+               }
+             } else if(e.key === 'Escape'){
+               setEditing({id:null, field:null});
+             }
+           }}
+        />
+      )
+     )
+    }
+    return (
+      <div className="flex items-center justify-between group">
+        
+        <span 
+          className="cursor-pointer hover:bg-gray-100 px-1 rounded flex-1"
+          onClick={() => {
+            setEditing({id, field});
+            setTempValue(value);
+          }}
+        >
+          {value}
+        </span>
+        <button 
+          className="p-1 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors opacity-0 group-hover:opacity-100"
+          onClick={() => { 
+            setEditing({id, field}); 
+            setTempValue(value); 
+          }}
+        >
+
+          
+            <Edit className="w-3 h-3" />
+          
+        </button>
+      </div>
+    )
+  }
+
+  const updateproperty = async (id, field, value) => {
+    try{
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/updateproperty.php`, { 
+        property_id: id,
+        field: field,
+        value: value
+      }, { withCredentials: true })
+      
+      console.log(response.data)
+      setstate(!state)
+      setEditing({id:null, field:null})
+      setTempValue('')
+    } catch(err){
+      console.error(err)
+      setEditing({id:null, field:null})
+      setTempValue('')
+    }
+  }
 
   return (
     <>
@@ -98,47 +215,93 @@ const Property = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {propertydata.map((property) => (
-          <AnimatedCard> 
-          <div key={property.id} className="card hover:shadow-lg transition-shadow">
-            <div className="w-full h-40 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg mb-4 flex items-center justify-center">
-              <Building2 className="w-16 h-16 text-white" />
-            </div>
-            <h3 className="text-lg font-bold text-gray-800 mb-2">{property.name}</h3>
-            <div className="flex items-center text-sm text-gray-600 mb-4">
-              <MapPin className="w-4 h-4 mr-2" />
-              {property.address}
-            </div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <p className="text-2xl font-bold text-primary-600">{property.total_floors}</p>
-                <p className="text-xs text-gray-600">Floors</p>
+  {propertydata.map((property) => (
+    <AnimatedCard key={property.property_id ?? property.id}>
+        <div className="card hover:shadow-lg transition-all p-4 bg-white rounded-xl border border-gray-100">
+          
+          {/* Property Image/Icon */}
+          <div className="w-full h-40 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg mb-4 flex items-center justify-center">
+            <Building2 className="w-16 h-16 text-white" />
+          </div>
+
+          {/* Property Name */}
+          <h3 className="text-lg font-bold text-gray-800 mb-2">
+            <Editablefield 
+              id={property.property_id ?? property.id}
+              field="name"
+              value={property.name}
+              onSave={updateproperty}
+            />
+          </h3>
+
+          {/* Address */}
+          <div className="flex items-center text-sm text-gray-600 mb-4">
+            <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+            <Editablefield 
+              id={property.property_id ?? property.id}
+              field="address"
+              value={property.address}
+              onSave={updateproperty}
+            />
+          </div>
+
+          {/* Floors and Units Grid */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
+              <div className="text-2xl font-bold text-primary-600">
+                <Editablefield 
+                  id={property.property_id ?? property.id}
+                  field="total_floors"
+                  value={property.total_floors}
+                  onSave={updateproperty}
+                />
               </div>
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <p className="text-2xl font-bold text-primary-600">{property.total_units}</p>
-                <p className="text-xs text-gray-600">Units</p>
-              </div>
+              <p className="text-xs text-gray-600">Floors</p>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                {property.status}
-              </span>
-              <div className="flex items-center space-x-2">
-                <button className="btn-icon bg-green-100 hover:bg-green-200 text-green-700">
-                  <Eye className="w-4 h-4" />
-                </button>
-                <button className="btn-icon bg-blue-100 hover:bg-blue-200 text-blue-700">
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button className="btn-icon bg-red-100 hover:bg-red-200 text-red-700" onClick={() => { setpopup(true); setselectedId(property.property_id ?? property.id); }}>
-                  <Trash2 className="w-4 h-4" />
-                </button>
+
+            <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-100">
+              <div className="text-2xl font-bold text-primary-600">
+                <Editablefield 
+                  id={property.property_id ?? property.id}
+                  field="total_units"
+                  value={property.total_units}
+                  onSave={updateproperty}
+                />
               </div>
+              <p className="text-xs text-gray-600">Units</p>
             </div>
           </div>
-          </AnimatedCard>
-        ))}
-      </div>
+
+          {/* Status and Action Buttons */}
+          <div className="flex items-center justify-between pt-2 border-t border-gray-50">
+            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+              property.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+            }`}>
+              <Editablefield 
+                id={property.property_id ?? property.id}
+                field="status"
+                value={property.status}
+                onSave={updateproperty}
+              />
+            </span>
+            
+            <div className="flex items-center space-x-2">
+              <button 
+                className="p-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
+                onClick={() => { 
+                  setpopup(true); 
+                  setselectedId(property.property_id ?? property.id); 
+                }}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </AnimatedCard>
+    )
+  )}
+</div>
     </div>
 
     {popup && (

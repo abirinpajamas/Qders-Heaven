@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Eye, Edit, Trash2, Search, Mail, Phone, User, Lock, UserPlus } from 'lucide-react'
 import axios from 'axios'
 import AnimatedCard from '../components/AnimatedCard'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 
 const AdminManagement = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -22,7 +23,8 @@ const AdminManagement = () => {
     confirmPassword: ''
   })
   const [errors, setErrors] = useState({})
-
+  const [editing,setEditing]=useState({})
+  const [tempValue,setTempValue]=useState('')
 
 
   useEffect(() => {
@@ -113,6 +115,133 @@ const AdminManagement = () => {
 
     } catch (error) {
       console.error('Error adding admin:', error)
+    }
+  }
+
+  const Editablefield=({id,field,value,onSave})=>{
+    const isediting=editing.id===id && editing.field===field;
+    
+    if(isediting){
+      return(
+          field=='user_type' ? (
+          <Select
+          defaultValue={value}
+          onValueChange={(newValue) => {
+              onSave(id, field, newValue);
+          }}
+         >
+          <SelectTrigger 
+           className="w-[120px] h-8 rounded-full border-primary-500 bg-transparent focus:ring-1 focus:ring-primary-400"
+          >
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+      
+          <SelectContent className="rounded-xl border-gray-100 shadow-lg">
+          <SelectItem 
+            value="admin" 
+            className="cursor-pointer focus:bg-primary-50 focus:text-primary-700 rounded-md"
+          >
+            <span className="flex items-center">
+            <span className="w-2 h-2 rounded-full bg-green-500 mr-2" />
+            Admin
+            </span>
+          </SelectItem>
+        
+          <SelectItem 
+            value="super admin" 
+            className="cursor-pointer focus:bg-red-50 focus:text-red-700 rounded-md"
+          >
+            <span className="flex items-center">
+            <span className="w-2 h-2 rounded-full bg-gray-400 mr-2" />
+            Super Admin
+            </span>
+          </SelectItem>
+        </SelectContent>
+      </Select>
+        ) : (
+        <input
+           autoFocus
+           className="border-b border-primary-500 outline-none bg-transparent w-full text-gray-800"
+           value={tempValue}
+           onChange={(e)=>setTempValue(e.target.value)}
+           onBlur={() => {
+             if(tempValue.trim() && tempValue !== value){
+              if(field === 'email' && !tempValue.includes('@')){
+                alert('Please enter a valid email address');
+                return;
+              }
+               onSave(id, field, tempValue);
+
+             } else {
+               setEditing({id:null, field:null});
+             }
+           }}
+           onKeyDown={(e) => {
+             if(e.key === 'Enter'){
+               if(tempValue.trim() && tempValue !== value){
+                 if(field === 'email' && !tempValue.includes('@')){
+                   alert('Please enter a valid email address');
+                   return;
+                 }
+                 onSave(id, field, tempValue);
+               } else {
+                 setEditing({id:null, field:null});
+               }
+             } else if(e.key === 'Escape'){
+               setEditing({id:null, field:null});
+             }
+           }}
+        />
+       )
+     ) 
+    }
+    return (
+      <div className="flex items-center justify-between group">
+        <span 
+          className="cursor-pointer hover:bg-gray-100 px-1 rounded flex-1"
+          onClick={() => {
+            setEditing({id, field});
+            setTempValue(value);
+          }}
+        >
+          {field === 'email' ? (
+          <>
+          <div className="flex items-center min-w-0">
+          <Mail className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+          <span className="truncate">{value}</span>
+          </div>
+          </>
+          ):( value)}
+        </span>
+        <button 
+          className="p-1 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors opacity-0 group-hover:opacity-100"
+          onClick={() => { 
+            setEditing({id, field}); 
+            setTempValue(value); 
+          }}
+        >
+          <Edit className="w-3 h-3" />
+        </button>
+      </div>
+    )
+  }
+
+  const updateadmin = async (id, field, value) => {
+    try{
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/updateuser.php`, { 
+        user_id: id,
+        field: field,
+        value: value
+      }, { withCredentials: true })
+      
+      console.log(response.data)
+      setrefresh(!refresh)
+      setEditing({id:null, field:null})
+      setTempValue('')
+    } catch(err){
+      console.error(err)
+      setEditing({id:null, field:null})
+      setTempValue('')
     }
   }
 
@@ -317,24 +446,38 @@ const AdminManagement = () => {
                     <span className="text-lg sm:text-2xl font-bold text-primary-600">{admin.fname.charAt(0)}</span>
                   </div>
                   <span className="px-2 sm:px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium whitespace-nowrap">
-                    {admin.user_type}
+                    <Editablefield 
+                      id={admin.user_id}
+                      field="user_type"
+                      value={admin.user_type}
+                      onSave={updateadmin}
+                    />
                   </span>
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-1 break-words">{admin.fname} {admin.lname}</h3>
-                <p className="text-xs sm:text-sm text-primary-600 font-medium mb-3 sm:mb-4">{admin.user_type}</p>
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-1 break-words">
+                  <Editablefield 
+                    id={admin.user_id}
+                    field="fname"
+                    value={admin.fname}
+                    onSave={updateadmin}
+                  /> 
+                </h3>
+                
                 <div className="space-y-2 mb-3 sm:mb-4">
                   <div className="flex items-center text-xs sm:text-sm text-gray-600 break-all">
-                    <Mail className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
-                    <span className="truncate">{admin.email}</span>
+                    <Editablefield 
+                    id={admin.user_id}
+                    field="email"
+                    value={admin.email}
+                    onSave={updateadmin}
+                  /> 
                   </div>
                   <div className="text-xs sm:text-sm text-gray-600">
                     <p className="truncate">Account Created: {admin.created_at}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button className="flex-1 btn-icon bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm sm:text-base py-2">
-                    <Edit className="w-3 h-3 sm:w-4 sm:h-4 mx-auto" />
-                  </button>
+                  
                   {role === 'super admin' && (
                     <button 
                       className="flex-1 btn-icon bg-red-100 hover:bg-red-200 text-red-700 text-sm sm:text-base py-2" 
