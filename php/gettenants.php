@@ -4,6 +4,7 @@ error_reporting(0);
 ini_set('display_errors', 0);
 
 include ("database.php");
+include ("auhcheck.php");
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? "*";
 $allowed_origins = [

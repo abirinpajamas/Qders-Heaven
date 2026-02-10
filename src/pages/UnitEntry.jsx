@@ -30,15 +30,20 @@ const UnitEntry = () => {
     const [editinfo,seteditinfo]=useState('')
     const [editing,setEditing]=useState([])
     const [tempValue,setTempValue]=useState('')
+    const [role,setRole]=useState('')
 
   
   useEffect(()=>{
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/fetchproperty.php`)
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/fetchproperty.php`,{
+      method: 'GET',
+      credentials: 'include'
+    })
      .then((res)=>res.json())
      .then((data)=>{
       if(data.success){
       setpropertydata(data.data);
       console.log(data)
+      setRole(data.role)
       }else{
         console.log(data.message)
         setpropmessage('Add properties in the Properties Page')
@@ -259,19 +264,15 @@ const UnitEntry = () => {
                     <Eye className="w-4 h-4" />
                     View
                   </button>
-                  <button 
-                    className="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded text-sm font-medium transition flex items-center justify-center gap-1"
-                    onClick={() => setviewinfo(unit)}
-                  >
-                    <Edit className="w-4 h-4" />
-                    Edit
-                  </button>
+                  
+                  {role==='super admin' && (
                   <button 
                     className="p-2 bg-red-100 hover:bg-red-200 text-red-700 rounded transition"
                     onClick={() => { setpopup(true); setselectedId(unit.unit_id); }}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
+                  )}
                 </div>
               </div>
             ))
@@ -323,9 +324,11 @@ const UnitEntry = () => {
                         <Eye className="w-4 h-4" />
                       </button>
                       
+                      {role==='super admin' && (
                       <button className="btn-icon bg-red-100 hover:bg-red-200 text-red-700" onClick={() => { setpopup(true); setselectedId(unit.unit_id); }}>
                         <Trash2 className="w-4 h-4" />
                       </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -512,9 +515,13 @@ const UnitEntry = () => {
     )}
     
     {prov && (
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50 p-4">
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50 p-4"
+           onClick={()=>setprov(false)}
+    >
+
         <form
           onSubmit={handleSubmit}
+          onClick={(e) => e.stopPropagation()}
           className="bg-white w-full max-w-md mx-auto rounded-2xl shadow-2xl p-4 sm:p-6 space-y-2.5 border border-sky-100 max-h-[90vh] overflow-y-auto"
         >
           <h2 className="text-lg sm:text-xl font-semibold text-center text-sky-700 mb-4">

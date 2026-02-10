@@ -15,7 +15,7 @@ header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
 header("Access-Control-Allow-Credentials: true");
-
+ 
 // Check for connection error
 if ($conn->connect_error) {
     http_response_code(500);
@@ -29,7 +29,8 @@ $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {
     $properties = $result->fetch_all(MYSQLI_ASSOC);
-    echo json_encode(["success"=>true, "data"=>$properties]);
+   
+    echo json_encode(["success"=>true, "data"=>$properties,"role"=>$_SESSION['admin_role']]);
 } else {
    
    echo json_encode(["success"=>false,"message"=>"No properties found"]);

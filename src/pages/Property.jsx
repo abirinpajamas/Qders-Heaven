@@ -22,13 +22,9 @@ const Property = () => {
     const [selectedId,setselectedId]=useState(null)
     const [editing,setEditing]=useState({})
     const [tempValue,setTempValue]=useState('')
+    const [role,setRole]=useState('')
     
 
-  const properties = [
-    { id: 1, name: 'Rangs Qaders Heaven', address: 'Mirpur, Dhaka', floors: 5, units: 20, status: 'Active' },
-    { id: 2, name: 'Green Valley Apartments', address: 'Gulshan, Dhaka', floors: 8, units: 32, status: 'Active' },
-    { id: 3, name: 'Sunset Heights', address: 'Banani, Dhaka', floors: 6, units: 24, status: 'Active' },
-  ]
   
   useEffect(() => {
     // Check if the navigation sent "openForm: true"
@@ -38,11 +34,15 @@ const Property = () => {
   }, [location]);
 
    useEffect(()=>{
-      fetch(`${import.meta.env.VITE_API_BASE_URL}/fetchproperty.php`)
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/fetchproperty.php`,{
+      method: 'GET',
+      credentials: 'include'
+    })
       .then((res)=>res.json())
       .then((data)=>{
         setpropertydata(data?.success ? data.data : [])
         console.log(data)
+        setRole(data.role)
 
       })
        .catch((error)=>{
@@ -285,6 +285,7 @@ const Property = () => {
               />
             </span>
             
+            {role === 'super admin' && (
             <div className="flex items-center space-x-2">
               <button 
                 className="p-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
@@ -296,6 +297,7 @@ const Property = () => {
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
+            )}
           </div>
         </div>
       </AnimatedCard>
@@ -338,7 +340,7 @@ const Property = () => {
        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50">
           <form
             onSubmit={handleSubmit}
-            className="bg-white w-full max-w-md mx-auto rounded-2xl shadow-2xl p-6 space-y-2.5 border border-sky-100"
+            className="bg-white w-auto sm:w-full max-w-md mx-auto  rounded-2xl shadow-2xl p-6 space-y-1.5 border border-sky-100"
           >
             <h2 className="text-xl font-semibold text-center text-sky-700 mb-4">
               Register New Property 

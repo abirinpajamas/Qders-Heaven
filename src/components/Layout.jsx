@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Header from './Header'
 
-const Layout = () => {
+const Layout = ({role}) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const toggleSidebar = () => {
@@ -13,7 +13,7 @@ const Layout = () => {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-gray-50 fixed inset-0">
       {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+      <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} role={role} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col lg:ml-64">

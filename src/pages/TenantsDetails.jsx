@@ -1,8 +1,12 @@
-import { UserCheck,MapPin,Mail, Phone, UserPlus,User, Plus, Eye, Edit, Trash2, Users, Clock } from 'lucide-react'
+import { UserCheck,MapPin,Mail, Phone, UserPlus,User, Plus, Eye, Edit, Trash2, Users, Clock, Calendar, FileText, CreditCard } from 'lucide-react'
 import { useState,useEffect } from 'react'
 import axios from 'axios'
 import { Link } from 'react-router-dom'
 import AnimatedCard from '../components/AnimatedCard'
+import { handleFileChange, createFormData } from '../utils/fileUpload'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import {Badge} from '@/components/ui/badge'
+import {Button} from '@/components/ui/button'
 
 const TenantsDetails = () => {
 
@@ -58,6 +62,7 @@ const TenantsDetails = () => {
   const [tenantname,settenantname]=useState('');
   const [tenantView, setTenantView] = useState('Current'); // 'Current' or 'Previous'
   const [warning,setWarning]=useState(false);
+  const [viewinfo,setviewinfo]=useState(null);
 
 
   
@@ -82,10 +87,9 @@ const TenantsDetails = () => {
 
   },[refresh])
 
-  // Filter tenants based on view
   const filteredTenants = tenantdata.filter(tenant => {
-    if (tenantView === 'Current' && tenant.unit_id) {
-      return tenant.Status !== 'Previous';
+    if (tenantView === 'Current') {
+      return tenant.unit_id && tenant.Status !== 'Previous';
     } else {
       return tenant.Status === 'Previous';
     }
@@ -146,32 +150,55 @@ const TenantsDetails = () => {
     console.log(name)
 
     try{  
-      const response=await axios.post(`${import.meta.env.VITE_API_BASE_URL}/tenant.php`, {
-      unitid,
-      name,
-      nid_num,
-      father,
-      mother,
-      occupation,
-      workAddress,
-      presentAddress,
-      permanentAddress,
-      ward,
-      thana,
-      citycorp,
-      advance,
-      phone1,
-      phone2,
-      famName,
-      famRltn,
-      famDOB,
-      startDate,
-      endDate,
-      notes,
-      }, { withCredentials: true })
+      // Prepare form data with files
+      const formData = createFormData({
+        unitid,
+        name,
+        nid_num,
+        father,
+        mother,
+        occupation,
+        workAddress,
+        presentAddress,
+        permanentAddress,
+        ward,
+        thana,
+        citycorp,
+        advance,
+        phone1,
+        phone2,
+        famName,
+        famRltn,
+        famDOB,
+        startDate,
+        endDate,
+        notes,
+      }, {
+        renterPicture,
+        nidAttachment,
+        passportAttachment
+      });
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/upload.php`, 
+        formData,
+        { 
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
       console.log(response.data.success)
       console.log(response.data)
       setrefresh(!refresh)
+      
+      // Reset file states
+      setRenterPicture(null);
+      setNidAttachment(null);
+      setPassportAttachment(null);
+      
       }catch(err){
         console.error(err)
       }
@@ -337,7 +364,8 @@ const TenantsDetails = () => {
           <AnimatedCard>
           <div key={tenant.tenant_id} className="card hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between mb-4">
-              <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center overflow-hidden">
+                <img src={tenant.renter_picture_url} alt=""/>
                 <User className="w-8 h-8 text-primary-600" />
               </div>
               <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
@@ -426,7 +454,7 @@ const TenantsDetails = () => {
                   <Eye className="w-4 h-4" />
                 </button>
                 */}
-                {tenantView === 'Current' && (
+                {tenantView === 'Current' && role==='super admin' &&(
                   <>
                     {tenantaccounts.some(acc=>acc.tenant_id===tenant.tenant_id)?(
                       <span className="flex-1 btn-icon bg-green-400">
@@ -438,16 +466,35 @@ const TenantsDetails = () => {
                       onClick={() => openPortalModal(tenant)}
                       title="Register Portal Account"
                     >
-                      <UserPlus className="w-4 h-4" />
+                     <div className='flex items-center text-sm'> 
+                      <UserPlus className="w-4 h-4 mx-1" />
+                      Invite
+                     </div>
                     </button>
                     )}
                     </>
                 )}
                     {role==='super admin' &&(
-                    <button className="flex-1 btn-icon bg-red-100 hover:bg-red-300 text-red-700" onClick={() => { setpopup(true); tenantView==='Current'?setselectedId({id:tenant.unit_id,status:tenantView}):setselectedId({id:tenant.tenant_id,status:tenantView}); }}>
-                      <Trash2 className="w-4 h-4" />
+                      <>
+
+                     <button className="flex-1 btn-icon bg-green-100 hover:bg-green-200 text-green-700" 
+                             onClick={()=>{setviewinfo(tenant)}}>
+                      <div className="flex items-center text-sm font-medium ">
+                      <Eye className="w-4 h-4 mx-1" /> 
+                      View
+                      </div>
                     </button>
+                    <button className="flex-1 btn-icon bg-red-100 hover:bg-red-300 text-red-700" onClick={() => { setpopup(true); tenantView==='Current'?setselectedId({id:tenant.unit_id,status:tenantView}):setselectedId({id:tenant.tenant_id,status:tenantView}); }}>
+                     <div className="flex items-center text-sm font-medium ">
+                      <Trash2 className="w-4 h-4 mx-1" />
+                      Delete
+                     </div>
+                    </button>
+                    </>
+                    
+
                     )}
+
                   
                 
                 {tenantView === 'Previous' && (
@@ -613,7 +660,7 @@ const TenantsDetails = () => {
         className="p-6 space-y-2.5"
       >
         <h2 className="text-xl font-semibold text-center text-sky-700 mb-4">
-          Register New Renter
+          Register New Tenant
         </h2>
         <button 
         type="button"
@@ -945,7 +992,7 @@ const TenantsDetails = () => {
             {/* Renter Picture */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Renter Picture
+                Tenant Picture
               </label>
               <input
                 type="file"
@@ -1020,11 +1067,14 @@ const TenantsDetails = () => {
             type="submit"
             className="px-5 py-2 rounded-lg bg-sky-600 text-white hover:bg-sky-700 shadow-sm transition"
           >
-            Register Renter
+            Register Tenant
           </button>
         </div>
       </form>
     </div>
+    </div>
+    )}
+  
     {warning && (
   /* This div creates the 'overlay' effect covering the entire form area */
   <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-[2px] rounded-2xl p-6">
@@ -1059,13 +1109,278 @@ const TenantsDetails = () => {
     </div>
   </div>
 )}
-  </div>
-  
 
-    )}
+    {/* Tenant View Info Modal */}
+    {viewinfo && (
+      <>
+      <Dialog
+        open={!!viewinfo}
+        onOpenChange={() => setviewinfo(null)}
+      >
+       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto"> 
+        
+        <DialogHeader className="relative">
+          <div className="flex items-center justify-between">
+            <Badge 
+              variant={viewinfo.Status === 'Current' ? 'default' : 'secondary'}
+              className="capitalize"
+            >
+                {viewinfo.Status}
+            </Badge>
+          
+          <DialogTitle className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center overflow-hidden">
+              {viewinfo.renter_picture_url ? (
+                <img 
+                  src={`/${viewinfo.renter_picture_url}`} 
+                  alt={viewinfo.name}
+                  className="w-full h-full object-cover rounded-full"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <User className="w-6 h-6 text-primary-600" style={{ display: viewinfo.renter_picture_url ? 'none' : 'flex' }} />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold">{viewinfo.name}</h2>
+              <p className="text-sm text-gray-500">ID: #{viewinfo.tenant_id}</p>
+            </div>
+          </DialogTitle>
+          <div className="w-[70px] invisible" aria-hidden="true" />
+        </div>
+      </DialogHeader>
+      
+      <div className="p-6 space-y-6">
+        {/* Primary Details Grid */}
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div className="bg-gray-100 p-3 rounded-xl">
+            <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Monthly Rent</p>
+            <p className="text-lg font-semibold text-gray-800">
+              ৳{viewinfo.unit_history ? viewinfo.unit_history.toLocaleString() : (viewinfo.base_rent ? viewinfo.base_rent.toLocaleString() : '0')}
+            </p>
+          </div>
+          <div className="bg-gray-100 p-3 rounded-xl">
+            <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Unit</p>
+            <p className="text-lg font-semibold text-gray-800">{viewinfo.unit_number}</p>
+          </div>
+          <div className="bg-gray-100 p-3 rounded-xl">
+            <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Property</p>
+            <p className="text-lg font-semibold text-gray-800">{viewinfo.property_name}</p>
+          </div>
+        </div>
+  
+        {/* Contact Information */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Contact Information</h3>
+          <div className="grid grid-cols-2 gap-y-3 border-t pt-3">
+            <div>
+              <p className="text-xs text-gray-500">Primary Phone</p>
+              <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <Phone className="w-3 h-3" />
+                {viewinfo.phone1}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Secondary Phone</p>
+              <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <Phone className="w-3 h-3" />
+                {viewinfo.phone2 || 'N/A'}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Email</p>
+              <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <Mail className="w-3 h-3" />
+                {viewinfo.email || 'N/A'}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">NID Number</p>
+              <p className="text-sm font-medium text-gray-700">{viewinfo.nid_num}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Personal Information */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Personal Information</h3>
+          <div className="grid grid-cols-2 gap-y-3 border-t pt-3">
+            <div>
+              <p className="text-xs text-gray-500">Father's Name</p>
+              <p className="text-sm font-medium text-gray-700">{viewinfo.father || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Mother's Name</p>
+              <p className="text-sm font-medium text-gray-700">{viewinfo.mother || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Occupation</p>
+              <p className="text-sm font-medium text-gray-700">{viewinfo.Occupation || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Work Address</p>
+              <p className="text-sm font-medium text-gray-700">{viewinfo.Work_Address || 'N/A'}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Address Information */}
+        <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+          <h3 className="text-sm font-bold text-blue-600 uppercase tracking-widest mb-3">Address Information</h3>
+          <div className="grid grid-cols-1 gap-3">
+            <div>
+              <p className="text-xs text-blue-600 font-semibold">Present Address</p>
+              <p className="text-sm text-gray-800">{viewinfo.Present_Address || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-blue-600 font-semibold">Permanent Address</p>
+              <p className="text-sm text-gray-800">{viewinfo.Permanent_address || 'N/A'}</p>
+            </div>
+            <div className="grid grid-cols-3 gap-4 mt-3">
+              <div>
+                <p className="text-xs text-blue-600 font-semibold">Ward</p>
+                <p className="text-sm text-gray-800">{viewinfo.ward || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-blue-600 font-semibold">Thana</p>
+                <p className="text-sm text-gray-800">{viewinfo.thana || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-blue-600 font-semibold">City Corporation</p>
+                <p className="text-sm text-gray-800">{viewinfo.Citycorp || 'N/A'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Lease Information */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Lease Information</h3>
+          <div className="grid grid-cols-3 gap-y-3 border-t pt-3">
+            <div>
+              <p className="text-xs text-gray-500">Advance Payment</p>
+              <p className="text-sm font-medium text-gray-700">৳{viewinfo.Advance ? viewinfo.Advance.toLocaleString() : '0'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Start Date</p>
+              <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <Calendar className="w-3 h-3" />
+                {viewinfo.start_date || 'N/A'}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">End Date</p>
+              <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <Calendar className="w-3 h-3" />
+                {viewinfo.end_date || 'N/A'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Family Information */}
+        {viewinfo.fam_name && (
+          <div className="space-y-3">
+            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Family Information</h3>
+            <div className="grid grid-cols-3 gap-y-3 border-t pt-3">
+              <div>
+                <p className="text-xs text-gray-500">Family Member</p>
+                <p className="text-sm font-medium text-gray-700">{viewinfo.fam_name}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Relationship</p>
+                <p className="text-sm font-medium text-gray-700">{viewinfo.fam_rltn || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Date of Birth</p>
+                <p className="text-sm font-medium text-gray-700">{viewinfo.fam_DOB || 'N/A'}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Documents */}
+        <div className="bg-green-50/50 p-4 rounded-xl border border-green-100">
+          <h3 className="text-sm font-bold text-green-600 uppercase tracking-widest mb-3">Documents</h3>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <p className="text-xs text-green-600 font-semibold">Tenant Picture</p>
+              {viewinfo.renter_picture_url ? (
+                <div className="mt-2">
+                  <img 
+                    src={`/${viewinfo.renter_picture_url}`} 
+                    alt="Tenant Picture" 
+                    className="w-20 h-20 object-cover rounded-lg border"
+                  />
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 mt-2">Not uploaded</p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-green-600 font-semibold">NID Attachment</p>
+              {viewinfo.nid_attachment_url ? (
+                <div className="mt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.open(`/${viewinfo.nid_attachment_url}`, '_blank')}
+                    className="flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    View NID
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 mt-2">Not uploaded</p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-green-600 font-semibold">Passport</p>
+              {viewinfo.passport_attachment_url ? (
+                <div className="mt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.open(`/${viewinfo.passport_attachment_url}`, '_blank')}
+                    className="flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    View Passport
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 mt-2">Not uploaded</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Notes */}
+        {viewinfo.notes && (
+          <div className="space-y-3">
+            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Additional Notes</h3>
+            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <p className="text-sm text-gray-700">{viewinfo.notes}</p>
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-between items-center pt-2 text-[10px] text-gray-600 italic">
+          <span>Added: {new Date(viewinfo.created_at || Date.now()).toLocaleDateString()}</span>
+        </div>
+       </div>
+       
+       </DialogContent>
+      </Dialog>
+      </>
+    
+  
+ )}
     </>
   )
   
 }
-
 export default TenantsDetails

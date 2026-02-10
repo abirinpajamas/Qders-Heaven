@@ -29,6 +29,7 @@ function App() {
  const[loggedIn,setloggedIn]=useState(false)
  const [userType, setUserType] = useState(null); // 'admin' or 'tenant'
  const [isLoading, setIsLoading] = useState(true);
+ const [role,setRole]=useState('')
 
 
   useEffect(() => {
@@ -49,6 +50,7 @@ function App() {
 
           setloggedIn(true);
           setUserType(data.user_type); // 'admin' or 'tenant'
+          setRole(data.role)
         } else {
           setloggedIn(false);
           setUserType(null);
@@ -74,7 +76,7 @@ function App() {
         {/* Admin Routes - Protected */}
         <Route path="/" element={
           <ProtectedRoutes isLoggedIn={loggedIn} isLoading={isLoading} requiredUserType="admin" userType={userType}>
-            <Layout />
+            <Layout role={role}/>
           </ProtectedRoutes>
         }>
           <Route index element={<Home />} />
@@ -89,7 +91,9 @@ function App() {
           <Route path="property-status" element={<PropertyStatus />} />
           <Route path="tenants-details" element={<TenantsDetails />} />
           <Route path="tenants-highlights" element={<TenantsHighlights />} />
+          {role==='super admin' && (
           <Route path="tenants-bill-generate" element={<TenantsBillGenerate />} />
+          )}
           <Route path="tenants-bill" element={<TenantsBill />} />
           <Route path="payment-details" element={<PaymentDetails />} />
           <Route path="maintenance-bill" element={<MaintenanceBill />} />

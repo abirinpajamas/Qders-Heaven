@@ -411,7 +411,7 @@ const handleGenerateMonthlyBills = async () => {
     </div>
      {popup && (
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50">
-        <div className="bg-white w-full max-w-md mx-auto rounded-2xl shadow-2xl p-6 space-y-4 border border-red-100">
+        <div className="bg-white w-full max-w-md mx-2 rounded-2xl shadow-2xl p-6 space-y-4 border border-red-100">
           <h2 className="text-xl font-semibold text-center text-red-700 mb-4">
             Generate Monthly Bills
           </h2>

@@ -110,11 +110,11 @@ const PaymentDetails = () => {
 
         <div className="card">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs md:text-sm text-gray-600">Failed</p>
+            <p className="text-xs md:text-sm text-gray-600">Partial Payments</p>
             <XCircle className="w-4 h-4 md:w-5 md:h-5 text-red-600" />
           </div>
           <h3 className="text-xl md:text-2xl font-bold text-gray-800 break-words">৳{failed.reduce((sum, p) => sum + (p.amount ? Number(p.amount) : 0), 0).toLocaleString()}</h3>
-          <p className="text-xs md:text-sm text-red-600 mt-2">{failed.length} payment</p>
+          <p className="text-xs md:text-sm text-red-600 mt-2">{pending.length} payments</p>
         </div>
 
         <div className="card">
@@ -123,7 +123,6 @@ const PaymentDetails = () => {
             <CreditCard className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
           </div>
           <h3 className="text-xl md:text-2xl font-bold text-gray-800">{payments.length}</h3>
-          <p className="text-xs md:text-sm text-blue-600 mt-2">All time</p>
         </div>
       </div>
 

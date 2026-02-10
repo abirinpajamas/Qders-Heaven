@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { 
   Home, 
   User,
@@ -22,7 +22,8 @@ import {
   ChevronRight
 } from 'lucide-react'
 
-const Sidebar = ({ isOpen, toggleSidebar }) => {
+const Sidebar = ({ isOpen, toggleSidebar,role }) => {
+
   const [openSections, setOpenSections] = useState({
     maintenance: false,
     settings: false
@@ -37,6 +38,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const menuItems = [
     { path: '/', icon: Home, label: 'Home' },
     { path: '/report', icon: FileText, label: 'Report' },
+           { path: '/fund', icon: DollarSign, label: 'Fund' },
+
     { path: '/payment-details', icon: CreditCard, label: 'Payment Details' },
 
     // Maintenance Section
@@ -63,9 +66,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       section: 'Financials',
       icon: DollarSign,
       items: [
-       { path: '/fund', icon: DollarSign, label: 'Fund' },
-       { path: '/tenants-bill-generate', icon: FileSpreadsheet, label: "Tenant's Bill Generate" },
-       { path: '/tenants-bill', icon: Receipt, label: 'Tenants Bill' },
+
+       ...(role === 'super admin' ? [{ 
+       path: '/tenants-bill-generate', 
+       icon: FileSpreadsheet, 
+       label: "Tenant's Bill Generate" 
+    }] : []),       { path: '/tenants-bill', icon: Receipt, label: 'Tenants Bill' },
        { path: '/maintenance-bill', icon: FileText, label: 'Maintenance Bills' }
 
 

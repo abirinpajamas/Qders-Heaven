@@ -446,12 +446,14 @@ const AdminManagement = () => {
                     <span className="text-lg sm:text-2xl font-bold text-primary-600">{admin.fname.charAt(0)}</span>
                   </div>
                   <span className="px-2 sm:px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium whitespace-nowrap">
+                    {role === 'super admin'? (
                     <Editablefield 
                       id={admin.user_id}
                       field="user_type"
                       value={admin.user_type}
                       onSave={updateadmin}
                     />
+                  ):admin.user_type}
                   </span>
                 </div>
                 <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-1 break-words">

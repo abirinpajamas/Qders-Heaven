@@ -163,7 +163,7 @@ const ServiceProviderContact = () => {
        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50">
           <form
             onSubmit={handleSubmit}
-            className="bg-white w-full max-w-md mx-auto rounded-2xl shadow-2xl p-6 space-y-2.5 border border-sky-100"
+            className="bg-white w-full max-w-md mx-2 rounded-2xl shadow-2xl p-5 space-y-1.5 border border-sky-100"
           >
             <h2 className="text-xl font-semibold text-center text-sky-700 mb-4">
               Register New Service Provider

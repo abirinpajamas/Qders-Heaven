@@ -1,0 +1,4 @@
+# Protect the uploads folder ONLY
+<Files "*.php">
+    Require all denied
+</Files>
