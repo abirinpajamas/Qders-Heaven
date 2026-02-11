@@ -75,7 +75,7 @@ if ($stmt = $conn->prepare($sqlTenant)) {
 $unit_id = $response['unit_id'];
 
 // Due bills count for this unit
-$sqlDue = "SELECT COUNT(*) AS due_bills_count FROM bills WHERE tenant_id = ? AND status IN ('unpaid','pending','overdue')";
+$sqlDue = "SELECT COUNT(*) AS due_bills_count FROM bills WHERE tenant_id = ? AND status IN ('unpaid','pending','overdue','partially paid')";
 if ($stmt = $conn->prepare($sqlDue)) {
     $stmt->bind_param("i", $tenant_id);
     $stmt->execute();

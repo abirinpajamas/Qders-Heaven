@@ -42,6 +42,13 @@ WHERE status IN ('unpaid', 'partially paid')
   AND period_start <= ? 
   AND period_end >= ?";
 
+$sql2="SELECT 
+    COALESCE(SUM(amount - paid), 0) AS total_overdue_amount,
+    COUNT(bill_id) AS overdue_bills_count
+FROM bills
+WHERE status IN ('Unpaid', 'Partially Paid')
+  AND `period_end` < CURRENT_DATE;";
+
 $response = ["success" => false];
 
 try {
@@ -81,12 +88,28 @@ try {
     $pending_bills_count = $pending_bills['pending_bills_count'] ?? 0;
     
     $stmt1->close();
+
+    $stmt2 = $conn->prepare($sql2);
+    
+    if ($stmt2 === false) {
+        throw new Exception("Query preparation failed: " . $conn->error);
+    }
+    
+    $stmt2->execute();
+    $result2 = $stmt2->get_result();
+    
+    $overdue_bills = $result2->fetch_assoc();
+    $total_overdue_amount = $overdue_bills['total_overdue_amount'] ?? 0;
+    $overdue_bills_count = $overdue_bills['overdue_bills_count'] ?? 0;
+    $stmt2->close();
     
     $response = [
         "success" => true,
         "payments" => $payments,
         "total_due_amount" => $total_due_amount,
-        "pending_bills_count" => $pending_bills_count
+        "pending_bills_count" => $pending_bills_count,
+        "total_overdue_amount" => $total_overdue_amount,
+        "overdue_bills_count" => $overdue_bills_count
     ];
 } catch (Exception $e) {
     $response['message'] = $e->getMessage();

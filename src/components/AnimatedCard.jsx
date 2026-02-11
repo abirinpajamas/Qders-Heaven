@@ -6,7 +6,7 @@ export default function AnimatedCard({ children }) {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -6 }}
-      transition={{ duration: 0.25 }}
+      transition={{ duration: 0.1 }}
     >
       {children}
     </motion.div>

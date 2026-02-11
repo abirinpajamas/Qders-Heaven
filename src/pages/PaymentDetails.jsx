@@ -13,6 +13,8 @@ const PaymentDetails = () => {
   const [loading, setLoading] = useState(true);
   const [totalDue, setTotalDue] = useState(0);
   const [pendingBills, setPendingBills] = useState(0);
+  const [totalOverdue, setTotalOverdue] = useState(0);
+  const [overdueBills, setOverdueBills] = useState(0);
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -27,6 +29,8 @@ const PaymentDetails = () => {
           setPayments(res.data.payments || []);
           setTotalDue(res.data.total_due_amount);
           setPendingBills(res.data.pending_bills_count);
+          setTotalOverdue(res.data.total_overdue_amount);
+          setOverdueBills(res.data.overdue_bills_count);
         }
       } catch (err) {
         // handle error
@@ -117,8 +121,8 @@ const PaymentDetails = () => {
             <p className="text-xs md:text-sm text-gray-600">Overdue Bills</p>
             <XCircle className="w-4 h-4 md:w-5 md:h-5 text-red-600" />
           </div>
-          <h3 className="text-xl md:text-2xl font-bold text-gray-800 break-words">৳{failed.reduce((sum, p) => sum + (p.amount ? Number(p.amount) : 0), 0).toLocaleString()}</h3>
-          <p className="text-xs md:text-sm text-red-600 mt-2">{pending.length} payments</p>
+          <h3 className="text-xl md:text-2xl font-bold text-gray-800 break-words">৳{Number(totalOverdue).toLocaleString()}</h3>
+          <p className="text-xs md:text-sm text-red-600 mt-2">{Number(overdueBills).toLocaleString()} Bills</p>
         </div>
 
         <div className="card">

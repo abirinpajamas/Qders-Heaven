@@ -1,11 +1,91 @@
-import { Check, ChevronDown, Plus, Building2, MapPin, Edit, Trash2, Eye } from 'lucide-react'
-import { useState,useEffect } from 'react'
+import { Check, ChevronDown, Plus, Building2, MapPin, Edit, Trash2, Eye, FileInput } from 'lucide-react'
+import { useState,useEffect, useRef } from 'react'
 import axios from 'axios'
 import { useLocation } from 'react-router-dom';
 import AnimatedCard from '../components/AnimatedCard';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { handleFileChange, createFormData } from '../utils/fileUpload';
 
 const Property = () => {
+
+  const EditablePhoto=({id, currentUrl, onSave, propertyName})=>{
+    const [selectedFile,setselectedFile]=useState(null);
+    const [uploading,setuploading]=useState(false);
+    const fileInputRef=useRef(null);
+
+    const handleFileSelect=(e)=>{
+      handleFileChange(e, (file) => {
+        if(file){
+          setselectedFile(file);
+          handleUpload(file);
+        }
+      });
+    };
+
+    const handleUpload=async(file)=>{
+      setuploading(true);
+      try{
+        const formdata=createFormData({
+          property_id: id,
+          field: 'property_image'
+        }, { property_image: file });
+
+        const response=await axios.post(`${import.meta.env.VITE_API_BASE_URL}/updateproperty.php`, 
+          formdata, 
+          { withCredentials: true, headers: { 'Content-Type': 'multipart/form-data' } });
+
+        if(response.data.success){
+          onSave(id, 'property_picture_url', response.data.new_url);
+        }
+      }catch(err){
+        console.error('Photo upload failed:', err);
+      }finally{
+        setuploading(false);
+        setselectedFile(null);
+      }
+    };
+
+    return (
+      <div className="relative w-full h-40 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg mb-4 flex items-center justify-center overflow-hidden group cursor-pointer">
+        {currentUrl ? (
+          <img 
+            src={`/${currentUrl}`} 
+            alt={propertyName} 
+            className="w-full h-full object-cover" 
+          />
+        ) : (
+          <Building2 className="w-16 h-16 text-white" />
+        )}
+        
+        {/* Overlay on hover */}
+        <div className={`absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center transition-opacity ${
+          uploading ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+        }`}>
+          {uploading ? (
+            <div className="text-white text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+              <p className="text-sm">Uploading...</p>
+            </div>
+          ) : (
+            <div className="text-white text-center">
+              <Edit className="w-6 h-6 mx-auto mb-2" />
+              <p className="text-sm">Change Photo</p>
+            </div>
+          )}
+        </div>
+
+        {/* Hidden file input that covers the entire clickable area */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          disabled={uploading}
+        />
+      </div>
+    );
+  };
 
 
 
@@ -21,6 +101,7 @@ const Property = () => {
     const [popup,setpopup]=useState(false)
     const [selectedId,setselectedId]=useState(null)
     const [editing,setEditing]=useState({})
+    const [property_image,setproperty_image]=useState(null)
     const [tempValue,setTempValue]=useState('')
     const [role,setRole]=useState('')
     
@@ -58,14 +139,28 @@ const Property = () => {
     setprov(false)
     console.log(name)
    try{
-    const response=await axios.post(`${import.meta.env.VITE_API_BASE_URL}/property.php`, {
+   const formdata=createFormData({
       name,
       total_floors,
       address,
       total_units,
       description,
       status
-    }, { withCredentials: true })
+
+   },{
+    property_image
+   })
+
+
+
+
+    const response=await axios.post(`${import.meta.env.VITE_API_BASE_URL}/property.php`, 
+      formdata, 
+      { withCredentials: true,
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
     console.log(response.data.success)
     console.log(response.data)
     setstate(!state)
@@ -220,9 +315,12 @@ const Property = () => {
         <div className="card hover:shadow-lg transition-all p-4 bg-white rounded-xl border border-gray-100">
           
           {/* Property Image/Icon */}
-          <div className="w-full h-40 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg mb-4 flex items-center justify-center">
-            <Building2 className="w-16 h-16 text-white" />
-          </div>
+          <EditablePhoto 
+            id={property.property_id ?? property.id}
+            currentUrl={property.property_picture_url}
+            onSave={updateproperty}
+            propertyName={property.name}
+          />
 
           {/* Property Name */}
           <h3 className="text-lg font-bold text-gray-800 mb-2">
@@ -340,7 +438,7 @@ const Property = () => {
        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm z-50">
           <form
             onSubmit={handleSubmit}
-            className="bg-white w-auto sm:w-full max-w-md mx-auto  rounded-2xl shadow-2xl p-6 space-y-1.5 border border-sky-100"
+            className="bg-white w-auto sm:w-full max-w-md mx-auto sm:max-h-[95vh] rounded-2xl shadow-2xl p-6 space-y-1.5 border border-sky-100 overflow-y-auto"
           >
             <h2 className="text-xl font-semibold text-center text-sky-700 mb-4">
               Register New Property 
@@ -419,6 +517,19 @@ const Property = () => {
                 placeholder="Description of the property"
                 
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Property Image
+              </label>
+              <input type="file"
+              onChange={(e) => handleFileChange(e,setproperty_image)}
+              accept='image/*'
+                className="w-full border border-sky-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 focus:outline-none file:mr-4 file:py-1 file:px-4 file:rounded-lg file:border-0 file:text-sm file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 "
+              />
+              {property_image && (
+                <p className="text-xs text-green-600 mt-1">✓ {property_image.name}</p>
+              )}
             </div>
 
             {/* Service Type */}

@@ -26,21 +26,73 @@ if (!$conn) {
     echo json_encode(["success" => false, "error" => "Database connection failed"]);
     exit;
 }
+
+
+  $baseUploadDir = '../uploads/';
+$tenantDirs = [
+    'properties/property/',
+  
+];
+
+foreach ($tenantDirs as $dir) {
+    $fullPath = $baseUploadDir . $dir;
+    if (!file_exists($fullPath)) {
+        mkdir($fullPath, 0755, true);
+    }
+}
+
+function uploadFile($file, $directory, $prefix = '') {
+    global $baseUploadDir;
+    
+    if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
+        return null;
+    }
+    
+    // Validate file
+    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+    $maxFileSize = 5 * 1024 * 1024; // 5MB
+    
+    if (!in_array($file['type'], $allowedTypes)) {
+        throw new Exception("Invalid file type. Only images and PDFs are allowed.");
+    }
+    
+    if ($file['size'] > $maxFileSize) {
+        throw new Exception("File size too large. Maximum 5MB allowed.");
+    }
+    
+    // Generate unique filename
+    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $filename = $prefix . uniqid('',true) . '_' . time() . '.' . $extension;
+    $uploadPath = $baseUploadDir . $directory . $filename;
+    
+    // Move uploaded file
+    if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
+        return 'uploads/' . $directory . $filename;
+    } else {
+        throw new Exception("Failed to upload file.");
+    }
+}
+
    
   if($_SERVER["REQUEST_METHOD"] === "POST") {
       $data = json_decode(file_get_contents("php://input")); 
 
-    $name = $data->name;
-    $totalfloors = $data->total_floors;
-    $address = $data->address;
-    $units = $data->total_units;
-    $description = $data->description;
-    $status = $data->status;
+    $name = $_POST['name']??'';
+    $totalfloors = $_POST['total_floors']??'';
+    $address = $_POST['address']??'';
+    $units = $_POST['total_units']??'';
+    $description = $_POST['description']??'';
+    $status = $_POST['status']??'';
+    $picturePath = null;
 
-    $sql = "insert into properties (name, total_floors, address, total_units, description, status) 
-       values (?,?,?,?,?,?)";
+    if (isset($_FILES['property_image'])) {
+        $picturePath = uploadFile($_FILES['property_image'], 'properties/property/', 'property_');
+    }
+
+    $sql = "insert into properties (name, total_floors, address, total_units, description, status, property_picture_url) 
+       values (?,?,?,?,?,?,?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssss", $name, $totalfloors, $address, $units, $description, $status);
+    $stmt->bind_param("sssssss", $name, $totalfloors, $address, $units, $description, $status, $picturePath);
 
     if ($stmt->execute()) {
         $response=["success" => true, "message" => "Input successful"];
