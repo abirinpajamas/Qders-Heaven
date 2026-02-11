@@ -34,6 +34,7 @@ const TenantsDetails = () => {
   const [renterPicture, setRenterPicture] = useState(null);
   const [nidAttachment, setNidAttachment] = useState(null);
   const [passportAttachment, setPassportAttachment] = useState(null);
+  const [contractAttachment, setContractAttachment] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [unitdata, setunitdata] = useState([]);
   const [tenantdata, settenantdata] = useState([]);
@@ -176,7 +177,8 @@ const TenantsDetails = () => {
       }, {
         renterPicture,
         nidAttachment,
-        passportAttachment
+        passportAttachment,
+        contractAttachment
       });
 
       const response = await axios.post(
@@ -1008,6 +1010,20 @@ const TenantsDetails = () => {
             {/* NID Attachment */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tenant Contract
+              </label>
+              <input
+                type="file"
+                onChange={(e) => handleFileChange(e, setContractAttachment)}
+                accept="image/*,.pdf"
+                className="w-full border border-sky-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-sky-400 focus:outline-none file:mr-4 file:py-1 file:px-4 file:rounded-lg file:border-0 file:text-sm file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
+              />
+              {contractAttachment && (
+                <p className="text-xs text-green-600 mt-1">✓ {contractAttachment.name}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 NID Attachment
               </label>
               <input
@@ -1318,6 +1334,24 @@ const TenantsDetails = () => {
               ) : (
                 <p className="text-sm text-gray-500 mt-2">Not uploaded</p>
               )}
+              <div>
+              <p className="text-xs text-green-600 font-semibold">Contract</p>
+              {viewinfo.contract_attachment_url ? (
+                <div className="mt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.open(`/${viewinfo.passport_attachment_url}`, '_blank')}
+                    className="flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    View Contract
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 mt-2">Not uploaded</p>
+              )}
+            </div>
             </div>
             <div>
               <p className="text-xs text-green-600 font-semibold">NID Attachment</p>

@@ -27,7 +27,8 @@ $baseUploadDir = '../uploads/';
 $tenantDirs = [
     'tenants/picture/',
     'tenants/nid/',
-    'tenants/passport/'
+    'tenants/passport/',
+    'tenants/contract/'
 ];
 
 foreach ($tenantDirs as $dir) {
@@ -93,11 +94,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $startDate = $_POST['startDate'] ?? '';
         $endDate = $_POST['endDate'] ?? '';
         $notes = $_POST['notes'] ?? '';
+
         
         // Upload files
         $picturePath = null;
         $nidPath = null;
         $passportPath = null;
+        $contractPath = null;
         
         if (isset($_FILES['renterPicture'])) {
             $picturePath = uploadFile($_FILES['renterPicture'], 'tenants/picture/', 'tenant_');
@@ -109,6 +112,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         
         if (isset($_FILES['passportAttachment'])) {
             $passportPath = uploadFile($_FILES['passportAttachment'], 'tenants/passport/', 'passport_');
+        }
+        
+        if (isset($_FILES['contractAttachment'])) {
+            $contractPath = uploadFile($_FILES['contractAttachment'], 'tenants/contract/', 'contract_');
         }
         
         // Start transaction
@@ -126,16 +133,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             unit_id, name, nid_num, father, mother, Occupation, Work_Address, 
             Present_Address, Permanent_address, ward, thana, Citycorp, Advance, 
             phone1, phone2, fam_name, fam_rltn, fam_DOB, start_date, end_date, notes,
-            renter_picture_url, nid_attachment_url, passport_attachment_url
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            renter_picture_url, nid_attachment_url, passport_attachment_url,contract_attachment_url
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
-            "isssssssssssisssssssssss", 
+            "isssssssssssissssssssssss", 
             $unitid, $name, $nid_num, $father, $mother, $occupation, $workAddress, 
             $presentAddress, $permanentAddress, $ward, $thana, $citycorp, $advance, 
             $phone1, $phone2, $famName, $famRltn, $famDOB, $startDate, $endDate, $notes,
-            $picturePath, $nidPath, $passportPath       
+            $picturePath, $nidPath, $passportPath,$contractPath       
         );
         
         if ($stmt->execute()) {
@@ -146,7 +153,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 "files" => [
                     "picture" => $picturePath,
                     "nid" => $nidPath,
-                    "passport" => $passportPath
+                    "passport" => $passportPath,
+                    "contract" => $contractPath
                 ]
             ];
             echo json_encode($response);
