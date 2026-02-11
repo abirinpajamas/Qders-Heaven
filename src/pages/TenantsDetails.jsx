@@ -1117,7 +1117,7 @@ const TenantsDetails = () => {
         open={!!viewinfo}
         onOpenChange={() => setviewinfo(null)}
       >
-       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto"> 
+       <DialogContent className="w-[calc(100vw-1rem)]  sm:mx-auto sm:max-w-2xl max-h-[80vh] sm:max-h-[90vh] rounded-2xl overflow-y-auto"> 
         
         <DialogHeader className="relative">
           <div className="flex items-center justify-between">
@@ -1152,7 +1152,7 @@ const TenantsDetails = () => {
         </div>
       </DialogHeader>
       
-      <div className="p-6 space-y-6">
+      <div className="p-1 space-y-6 sm:p-6">
         {/* Primary Details Grid */}
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="bg-gray-100 p-3 rounded-xl">

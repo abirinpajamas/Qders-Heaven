@@ -352,7 +352,7 @@ const UnitEntry = () => {
         open={!!viewinfo}
         onOpenChange={() => setviewinfo(null)}
       >
-       <DialogContent className="sm:md:w-md rounded-2xl"> 
+       <DialogContent className="w-[calc(100vw-2rem)] sm:md:w-md rounded-2xl"> 
         
         <DialogHeader className="relative">
           <div className="flex items justify-between">

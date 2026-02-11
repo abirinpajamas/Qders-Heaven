@@ -49,7 +49,10 @@ const TenantsBillGenerate = () => {
  },[])
 
  useEffect(()=>{
-  fetch(`${import.meta.env.VITE_API_BASE_URL}/fetchproperty.php`)
+  fetch(`${import.meta.env.VITE_API_BASE_URL}/fetchproperty.php`,{
+      method: 'GET',
+      credentials: 'include'
+    })
   .then((res)=>res.json())
   .then((data)=>{
     setProperty(data?.success ? data.data : [])

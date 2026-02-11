@@ -11,6 +11,8 @@ const PaymentDetails = () => {
   const [endDate, setEndDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [totalDue, setTotalDue] = useState(0);
+  const [pendingBills, setPendingBills] = useState(0);
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -23,6 +25,8 @@ const PaymentDetails = () => {
         console.log("Payment data:", res.data);
         if (res.data && res.data.success) {
           setPayments(res.data.payments || []);
+          setTotalDue(res.data.total_due_amount);
+          setPendingBills(res.data.pending_bills_count);
         }
       } catch (err) {
         // handle error
@@ -101,16 +105,16 @@ const PaymentDetails = () => {
 
         <div className="card">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs md:text-sm text-gray-600">Due</p>
+            <p className="text-xs md:text-sm text-gray-600">Pending Bills</p>
             <Clock className="w-4 h-4 md:w-5 md:h-5 text-yellow-600" />
           </div>
-          <h3 className="text-xl md:text-2xl font-bold text-gray-800 break-words">৳{pending.reduce((sum, p) => sum + (p.due ? Number(p.due) : 0), 0).toLocaleString()}</h3>
-          <p className="text-xs md:text-sm text-yellow-600 mt-2">{pending.length} payments</p>
+          <h3 className="text-xl md:text-2xl font-bold text-gray-800 break-words">৳{Number(totalDue).toLocaleString()}</h3>
+          <p className="text-xs md:text-sm text-yellow-600 mt-2">{Number(pendingBills).toLocaleString()} Bills</p>
         </div>
 
         <div className="card">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs md:text-sm text-gray-600">Partial Payments</p>
+            <p className="text-xs md:text-sm text-gray-600">Overdue Bills</p>
             <XCircle className="w-4 h-4 md:w-5 md:h-5 text-red-600" />
           </div>
           <h3 className="text-xl md:text-2xl font-bold text-gray-800 break-words">৳{failed.reduce((sum, p) => sum + (p.amount ? Number(p.amount) : 0), 0).toLocaleString()}</h3>
