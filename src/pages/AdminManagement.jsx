@@ -22,6 +22,7 @@ const AdminManagement = () => {
     password: '',
     confirmPassword: ''
   })
+  const[picture,setPicture]=useState(null)
   const [errors, setErrors] = useState({})
   const [editing,setEditing]=useState({})
   const [tempValue,setTempValue]=useState('')
@@ -358,6 +359,7 @@ const AdminManagement = () => {
                     value={formData.user_type}
                     onChange={handleInputChange}
                     className="input-field w-full text-sm"
+                    required
                   >
                     <option value="admin">Admin</option>
                     <option value="super admin">Super Admin</option>

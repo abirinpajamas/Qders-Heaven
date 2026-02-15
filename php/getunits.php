@@ -1,5 +1,7 @@
 <?php
+
 include ("database.php");
+include ("auhcheck.php");
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? "*";
 $allowed_origins = [

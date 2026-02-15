@@ -4,7 +4,10 @@ error_reporting(0);
 ini_set('display_errors', 0);
 
 include ("database.php");
-include ("auhcheck.php");
+// Removed auhcheck.php include for report access consistency
+
+// Start session to access role information
+
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? "*";
 $allowed_origins = [

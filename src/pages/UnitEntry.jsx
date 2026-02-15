@@ -53,7 +53,10 @@ const UnitEntry = () => {
 
   },[])
   useEffect(()=>{
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/getunits.php`)
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/getunits.php`,{
+      method: 'GET',
+      credentials: 'include'
+    })
      .then((res)=>res.json())
      .then((data)=>{
 

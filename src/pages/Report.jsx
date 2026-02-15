@@ -38,8 +38,8 @@ const Report = () => {
     try {
       const [repRes, unitsRes, tenantsRes] = await Promise.all([
         axios.post(`${import.meta.env.VITE_API_BASE_URL}/getreports.php`, { start, end }, { withCredentials: true }),
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/getunits.php`, { withCredentials: true }).then(r => r.json()),
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/gettenants.php`, { withCredentials: true }).then(r => r.json())
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/getunits.php`,{method: 'GET',credentials: 'include'}).then(r => r.json()),
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/gettenants.php`,{method: 'GET',credentials: 'include'}).then(r => r.json())
       ])
       const rows = repRes.data?.data || []
       console.log('bills:',rows)
@@ -50,7 +50,7 @@ const Report = () => {
       setUnits(unitsRes || [])
       console.log('tenants:',tenantsRes)
       setTenants(tenantsRes.tenants || [])
-      console.log('Report Data:', tenantsRes.tenants)
+      console.log('Tenant Data:', tenantsRes.tenants)
       computeSummary(rows,paymentsum, unitsRes || [], tenantsRes.tenants || [])
     } catch (e) {
       console.error(e)

@@ -40,13 +40,10 @@ const TenantsDetails = () => {
   const [tenantdata, settenantdata] = useState([]);
   const [propertydata, setpropertydata] = useState([]);
   const [popup,setpopup]=useState(false);
-  const [selectedId,setselectedId]=useState({id:null,status:null});
-  const [refresh,setrefresh]=useState(false);
-  const [editing,setEditing]=useState({id:null, field:null});
-  const [tempValue,setTempValue]=useState("");
-  const [showinput,setshowinput]=useState(false);
-  const[baseRent,setBaseRent]=useState(0);
-  const[role,setRole]=useState('');
+  const [selectedId,setselectedId]=useState(null)
+  const [editing,setEditing]=useState({})
+  const [tempValue,setTempValue]=useState('')
+  const [role,setRole]=useState('')
   const [tenantaccounts,settenantaccounts]=useState([]);
   // Portal account creation states
   const [showPortalModal, setShowPortalModal] = useState(false);
@@ -64,6 +61,8 @@ const TenantsDetails = () => {
   const [tenantView, setTenantView] = useState('Current'); // 'Current' or 'Previous'
   const [warning,setWarning]=useState(false);
   const [viewinfo,setviewinfo]=useState(null);
+  const [refresh,setrefresh]=useState(false);
+  const[baseRent,setBaseRent]=useState(0);
 
 
   
@@ -75,6 +74,7 @@ const TenantsDetails = () => {
     .then((res)=>res.json())
     .then((data)=>{
       settenantdata(data.tenants?data.tenants:[])
+      console.log('baserent',data.tenants[2].base_rent)
       setRole(data.role)
       settenantaccounts(data.tenantsaccounts)
       console.log('tenant data',data)    
@@ -98,7 +98,10 @@ const TenantsDetails = () => {
 
   useEffect(()=>{
 
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/getunits.php`)
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/getunits.php`,{
+      method: 'GET',
+      credentials: 'include'
+    })
       .then((res)=>res.json())
       .then((data)=>{
         if(data && data.length>0){
@@ -129,9 +132,70 @@ const TenantsDetails = () => {
            className="border-b border-primary-500 outline-none bg-transparent w-full text-gray-800"
            value={tempValue}
            onChange={(e)=>setTempValue(e.target.value)}
-        
+           onBlur={() => {
+             if(tempValue.trim() && tempValue !== value){
+               onSave(id, field, tempValue);
+             } else {
+               setEditing({id:null, field:null});
+             }
+           }}
+           onKeyDown={(e) => {
+             if(e.key === 'Enter'){
+               if(tempValue.trim() && tempValue !== value){
+                 onSave(id, field, tempValue);
+               } else {
+                 setEditing({id:null, field:null});
+               }
+             } else if(e.key === 'Escape'){
+               setEditing({id:null, field:null});
+             }
+           }}
         />
       )
+    }
+    return (
+      <div className="flex items-center justify-between group">
+        <span 
+          className="cursor-pointer hover:bg-gray-100 px-1 rounded flex-1"
+          onClick={() => {
+            setEditing({id, field});
+            setTempValue(value);
+          }}
+        >
+          {value}
+        </span>
+        <button 
+          className="p-1 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors opacity-0 group-hover:opacity-100"
+          onClick={() => { 
+            setEditing({id, field}); 
+            setTempValue(value); 
+          }}
+        >
+          <Edit className="w-3 h-3" />
+        </button>
+      </div>
+    )
+  }
+
+  const updatetenant = async (id, field, value) => {
+    console.log('=== UPDATE TENANT FRONTEND DEBUG ===');
+    console.log('Sending:', { tenant_id: id, field: field, value: value });
+    
+    try{
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/updatetenant.php`, { 
+        tenant_id: id,
+        field: field,
+        value: value
+      }, { withCredentials: true })
+      
+      console.log('Response:', response.data)
+      setrefresh(!refresh)
+      setEditing({id:null, field:null})
+      setTempValue('')
+    } catch(err){
+      console.error('Error details:', err.response?.data || err.message)
+      setEditing({id:null, field:null})
+      setTempValue('')
     }
   }
 
@@ -222,31 +286,6 @@ const TenantsDetails = () => {
     }
   }
 
-  const updatetenant = async () => {
-    console.log(editing.id)
-    console.log(editing.field)
-    console.log(name)
-    try{
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/updatetenant.php`, { 
-        unit_id: editing.id,
-        field: editing.field,
-        value: editing.field === 'base_rent' ? baseRent : name
-      }, { withCredentials: true })
-      
-      console.log(response.data)
-      setrefresh(!refresh)
-      setEditing({id:null,field:null})
-      setBaseRent('')
-      setName('')
-    } catch(err){
-      
-      console.error(err)
-      setEditing({id:null,field:null})
-      setBaseRent('')
-      setName('')
-    }
-  }
-  
   const handleCreatePortalAccount = async () => {
     setPortalLoading(true);
     setPortalError('');
@@ -383,8 +422,8 @@ const TenantsDetails = () => {
           value={name}
           className="border-b-2 border-blue-500 outline-none bg-transparent" 
           onChange={(e) => setName(e.target.value)} 
-          onBlur={() => name!=""?updatetenant():setEditing({id: null, field: null})} 
-          onKeyDown={(e) => e.key === 'Enter' ? name!=""?updatetenant():setEditing({id: null, field: null}) : null}
+          onBlur={() => name!=""?updatetenant(tenant.tenant_id, 'name', name):setEditing({id: null, field: null})} 
+          onKeyDown={(e) => e.key === 'Enter' ? name!=""?updatetenant(tenant.tenant_id, 'name', name):setEditing({id: null, field: null}) : null}
           autoFocus
         /> 
       ) : (
@@ -412,7 +451,7 @@ const TenantsDetails = () => {
               </div>
               <div className="flex items-center text-sm text-gray-600">
                 <Mail className="w-4 h-4 mr-2" />
-                {tenant.phone2}
+                {tenant.email}
               </div>
               <div className="flex items-center text-sm text-gray-600">
                 <MapPin className="w-4 h-4 mr-2" />
@@ -431,12 +470,12 @@ const TenantsDetails = () => {
                         value={baseRent}
                         className="w-20 border-b-2 border-blue-500 outline-none bg-transparent" 
                         onChange={(e) => setBaseRent(e.target.value)} 
-                        onBlur={() => baseRent>0? updatetenant():setEditing({ id: null, field: null })} 
-                        onKeyDown={(e) => e.key === 'Enter' ? baseRent>0? updatetenant():setEditing({ id: null, field: null }) : null}
+                        onBlur={() => baseRent>0? updatetenant(tenant.tenant_id, 'base_rent', baseRent):setEditing({ id: null, field: null })} 
+                        onKeyDown={(e) => e.key === 'Enter' ? baseRent>0? updatetenant(tenant.tenant_id, 'base_rent', baseRent):setEditing({ id: null, field: null }) : null}
                         autoFocus
                       /> 
                     ) : (
-                      tenant.Status==='Current' && !tenant.unit_id?'৳' + (tenant.base_rent ? tenant.base_rent.toLocaleString() : '0'):'৳' + (tenant.unit_history ? tenant.unit_history.toLocaleString() : '0')
+                      tenant.Status==='Current' && tenant.unit_id?'৳' + (tenant.base_rent ? tenant.base_rent.toLocaleString() : '0'):'৳' + (tenant.unit_history ? tenant.unit_history.toLocaleString() : '0')
                     )}
                   </span>
 
@@ -1160,7 +1199,14 @@ const TenantsDetails = () => {
               <User className="w-6 h-6 text-primary-600" style={{ display: viewinfo.renter_picture_url ? 'none' : 'flex' }} />
             </div>
             <div>
-              <h2 className="text-lg font-semibold">{viewinfo.name}</h2>
+              <h2 className="text-lg font-semibold">
+                <Editablefield 
+                  id={viewinfo.tenant_id} 
+                  field="name" 
+                  value={viewinfo.name}
+                  onSave={updatetenant}
+                />
+              </h2>
               <p className="text-sm text-gray-500">ID: #{viewinfo.tenant_id}</p>
             </div>
           </DialogTitle>
@@ -1174,7 +1220,12 @@ const TenantsDetails = () => {
           <div className="bg-gray-100 p-3 rounded-xl">
             <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Monthly Rent</p>
             <p className="text-lg font-semibold text-gray-800">
-              ৳{viewinfo.unit_history ? viewinfo.unit_history.toLocaleString() : (viewinfo.base_rent ? viewinfo.base_rent.toLocaleString() : '0')}
+              <Editablefield 
+                id={viewinfo.tenant_id} 
+                field="base_rent" 
+                value={viewinfo.base_rent || '0'}
+                onSave={updatetenant}
+              />
             </p>
           </div>
           <div className="bg-gray-100 p-3 rounded-xl">
@@ -1195,26 +1246,48 @@ const TenantsDetails = () => {
               <p className="text-xs text-gray-500">Primary Phone</p>
               <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
                 <Phone className="w-3 h-3" />
-                {viewinfo.phone1}
+                <Editablefield 
+                  id={viewinfo.tenant_id} 
+                  field="phone1" 
+                  value={viewinfo.phone1}
+                  onSave={updatetenant}
+                />
               </p>
             </div>
             <div>
               <p className="text-xs text-gray-500">Secondary Phone</p>
               <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
                 <Phone className="w-3 h-3" />
-                {viewinfo.phone2 || 'N/A'}
+                <Editablefield 
+                  id={viewinfo.tenant_id} 
+                  field="phone2" 
+                  value={viewinfo.phone2 || ''}
+                  onSave={updatetenant}
+                />
               </p>
             </div>
             <div>
               <p className="text-xs text-gray-500">Email</p>
               <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
                 <Mail className="w-3 h-3" />
-                {viewinfo.email || 'N/A'}
+                <Editablefield 
+                  id={viewinfo.tenant_id} 
+                  field="email" 
+                  value={viewinfo.email || ''}
+                  onSave={updatetenant}
+                />
               </p>
             </div>
             <div>
               <p className="text-xs text-gray-500">NID Number</p>
-              <p className="text-sm font-medium text-gray-700">{viewinfo.nid_num}</p>
+              <p className="text-sm font-medium text-gray-700">
+                <Editablefield 
+                  id={viewinfo.tenant_id} 
+                  field="nid_num" 
+                  value={viewinfo.nid_num}
+                  onSave={updatetenant}
+                />
+              </p>
             </div>
           </div>
         </div>
@@ -1225,19 +1298,47 @@ const TenantsDetails = () => {
           <div className="grid grid-cols-2 gap-y-3 border-t pt-3">
             <div>
               <p className="text-xs text-gray-500">Father's Name</p>
-              <p className="text-sm font-medium text-gray-700">{viewinfo.father || 'N/A'}</p>
+              <p className="text-sm font-medium text-gray-700">
+                <Editablefield 
+                  id={viewinfo.tenant_id} 
+                  field="father" 
+                  value={viewinfo.father || ''}
+                  onSave={updatetenant}
+                />
+              </p>
             </div>
             <div>
               <p className="text-xs text-gray-500">Mother's Name</p>
-              <p className="text-sm font-medium text-gray-700">{viewinfo.mother || 'N/A'}</p>
+              <p className="text-sm font-medium text-gray-700">
+                <Editablefield 
+                  id={viewinfo.tenant_id} 
+                  field="mother" 
+                  value={viewinfo.mother || ''}
+                  onSave={updatetenant}
+                />
+              </p>
             </div>
             <div>
               <p className="text-xs text-gray-500">Occupation</p>
-              <p className="text-sm font-medium text-gray-700">{viewinfo.Occupation || 'N/A'}</p>
+              <p className="text-sm font-medium text-gray-700">
+                <Editablefield 
+                  id={viewinfo.tenant_id} 
+                  field="Occupation" 
+                  value={viewinfo.Occupation || ''}
+                  onSave={updatetenant}
+                />
+              </p>
             </div>
             <div>
               <p className="text-xs text-gray-500">Work Address</p>
-              <p className="text-sm font-medium text-gray-700">{viewinfo.Work_Address || 'N/A'}</p>
+              <p className="text-sm font-medium text-gray-700">
+                <Editablefield 
+                  id={viewinfo.tenant_id} 
+                  field="Work_Address" 
+                  value={viewinfo.Work_Address || ''}
+                  onSave={updatetenant}
+                />
+              </p>
             </div>
           </div>
         </div>
@@ -1248,24 +1349,59 @@ const TenantsDetails = () => {
           <div className="grid grid-cols-1 gap-3">
             <div>
               <p className="text-xs text-blue-600 font-semibold">Present Address</p>
-              <p className="text-sm text-gray-800">{viewinfo.Present_Address || 'N/A'}</p>
+              <p className="text-sm text-gray-800">
+                <Editablefield 
+                  id={viewinfo.tenant_id} 
+                  field="Present_Address" 
+                  value={viewinfo.Present_Address || ''}
+                  onSave={updatetenant}
+                />
+              </p>
             </div>
             <div>
               <p className="text-xs text-blue-600 font-semibold">Permanent Address</p>
-              <p className="text-sm text-gray-800">{viewinfo.Permanent_address || 'N/A'}</p>
+              <p className="text-sm text-gray-800">
+                <Editablefield 
+                  id={viewinfo.tenant_id} 
+                  field="Permanent_address" 
+                  value={viewinfo.Permanent_address || ''}
+                  onSave={updatetenant}
+                />
+              </p>
             </div>
             <div className="grid grid-cols-3 gap-4 mt-3">
               <div>
                 <p className="text-xs text-blue-600 font-semibold">Ward</p>
-                <p className="text-sm text-gray-800">{viewinfo.ward || 'N/A'}</p>
+                <p className="text-sm text-gray-800">
+                  <Editablefield 
+                    id={viewinfo.tenant_id} 
+                    field="ward" 
+                    value={viewinfo.ward || ''}
+                    onSave={updatetenant}
+                  />
+                </p>
               </div>
               <div>
                 <p className="text-xs text-blue-600 font-semibold">Thana</p>
-                <p className="text-sm text-gray-800">{viewinfo.thana || 'N/A'}</p>
+                <p className="text-sm text-gray-800">
+                  <Editablefield 
+                    id={viewinfo.tenant_id} 
+                    field="thana" 
+                    value={viewinfo.thana || ''}
+                    onSave={updatetenant}
+                  />
+                </p>
               </div>
               <div>
                 <p className="text-xs text-blue-600 font-semibold">City Corporation</p>
-                <p className="text-sm text-gray-800">{viewinfo.Citycorp || 'N/A'}</p>
+                <p className="text-sm text-gray-800">
+                  <Editablefield 
+                    id={viewinfo.tenant_id} 
+                    field="Citycorp" 
+                    value={viewinfo.Citycorp || ''}
+                    onSave={updatetenant}
+                  />
+                </p>
               </div>
             </div>
           </div>
@@ -1277,20 +1413,37 @@ const TenantsDetails = () => {
           <div className="grid grid-cols-3 gap-y-3 border-t pt-3">
             <div>
               <p className="text-xs text-gray-500">Advance Payment</p>
-              <p className="text-sm font-medium text-gray-700">৳{viewinfo.Advance ? viewinfo.Advance.toLocaleString() : '0'}</p>
+              <p className="text-sm font-medium text-gray-700">
+                <Editablefield 
+                  id={viewinfo.tenant_id} 
+                  field="Advance" 
+                  value={viewinfo.Advance || '0'}
+                  onSave={updatetenant}
+                />
+              </p>
             </div>
             <div>
               <p className="text-xs text-gray-500">Start Date</p>
               <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
                 <Calendar className="w-3 h-3" />
-                {viewinfo.start_date || 'N/A'}
+                <Editablefield 
+                  id={viewinfo.tenant_id} 
+                  field="start_date" 
+                  value={viewinfo.start_date || ''}
+                  onSave={updatetenant}
+                />
               </p>
             </div>
             <div>
               <p className="text-xs text-gray-500">End Date</p>
               <p className="text-sm font-medium text-gray-700 flex items-center gap-2">
                 <Calendar className="w-3 h-3" />
-                {viewinfo.end_date || 'N/A'}
+                <Editablefield 
+                  id={viewinfo.tenant_id} 
+                  field="end_date" 
+                  value={viewinfo.end_date || ''}
+                  onSave={updatetenant}
+                />
               </p>
             </div>
           </div>
@@ -1303,15 +1456,36 @@ const TenantsDetails = () => {
             <div className="grid grid-cols-3 gap-y-3 border-t pt-3">
               <div>
                 <p className="text-xs text-gray-500">Family Member</p>
-                <p className="text-sm font-medium text-gray-700">{viewinfo.fam_name}</p>
+                <p className="text-sm font-medium text-gray-700">
+                  <Editablefield 
+                    id={viewinfo.tenant_id} 
+                    field="fam_name" 
+                    value={viewinfo.fam_name}
+                    onSave={updatetenant}
+                  />
+                </p>
               </div>
               <div>
                 <p className="text-xs text-gray-500">Relationship</p>
-                <p className="text-sm font-medium text-gray-700">{viewinfo.fam_rltn || 'N/A'}</p>
+                <p className="text-sm font-medium text-gray-700">
+                  <Editablefield 
+                    id={viewinfo.tenant_id} 
+                    field="fam_rltn" 
+                    value={viewinfo.fam_rltn || ''}
+                    onSave={updatetenant}
+                  />
+                </p>
               </div>
               <div>
                 <p className="text-xs text-gray-500">Date of Birth</p>
-                <p className="text-sm font-medium text-gray-700">{viewinfo.fam_DOB || 'N/A'}</p>
+                <p className="text-sm font-medium text-gray-700">
+                  <Editablefield 
+                    id={viewinfo.tenant_id} 
+                    field="fam_DOB" 
+                    value={viewinfo.fam_DOB || ''}
+                    onSave={updatetenant}
+                  />
+                </p>
               </div>
             </div>
           </div>
