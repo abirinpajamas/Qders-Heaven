@@ -74,7 +74,6 @@ const TenantsDetails = () => {
     .then((res)=>res.json())
     .then((data)=>{
       settenantdata(data.tenants?data.tenants:[])
-      console.log('baserent',data.tenants[2].base_rent)
       setRole(data.role)
       settenantaccounts(data.tenantsaccounts)
       console.log('tenant data',data)    
